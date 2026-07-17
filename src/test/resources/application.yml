@@ -1,0 +1,6 @@
+ledger:
+  jwt:
+    # Test-only key (48 bytes). Never reuse outside tests.
+    secret: eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4
+    access-ttl: 15m
+    refresh-ttl: 7d
