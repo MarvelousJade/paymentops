@@ -19,4 +19,14 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
     default long ledgerBalance(Long accountId) {
         return sumByDirection(accountId, LedgerEntry.Direction.CREDIT) - sumByDirection(accountId, LedgerEntry.Direction.DEBIT);
     }
+
+    @Query("select coalesce(sum(e.amountCents), 0) from LedgerEntry e where e.accountId = :accountId and e.direction = :direction and e.createdAt < :before")
+    long sumByDirectionBefore(@Param("accountId") Long accountId, @Param("direction") LedgerEntry.Direction direction,
+                              @Param("before") Instant before);
+
+    /** Statement opening/closing balances: ledger balance as of an instant (exclusive). */
+    default long ledgerBalanceBefore(Long accountId, Instant before) {
+        return sumByDirectionBefore(accountId, LedgerEntry.Direction.CREDIT, before)
+                - sumByDirectionBefore(accountId, LedgerEntry.Direction.DEBIT, before);
+    }
 }

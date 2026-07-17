@@ -59,3 +59,12 @@ catch the violation and return the winner's row — the Stripe replay contract:
 same key, same transfer, whatever state it reached. Crash between claim and
 settle leaves a PENDING row a client sees via `GET /transfers/{id}` — the async
 settlement phase makes PENDING a first-class state anyway.
+
+## 7. Batch scheduling via @Scheduled, not EventBridge
+
+Statements and reconciliation are Spring Batch jobs (restartable, instrumented,
+chunked reads) triggered by in-process `@Scheduled` crons. The cloud-native
+alternative is EventBridge Scheduler hitting an endpoint or launching a task —
+right when there are multiple instances (in-process cron would fire once per
+instance) or when the app scales to zero. One Railway instance makes @Scheduled
+the honest choice; the job code wouldn't change, only the trigger.

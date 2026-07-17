@@ -1,4 +1,18 @@
+# Shadows the main application.yml on the test classpath — every property tests need lives here.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+
 ledger:
+  statements:
+    dir: target/test-statements
   jwt:
     # Test-only key (48 bytes). Never reuse outside tests.
     secret: eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4

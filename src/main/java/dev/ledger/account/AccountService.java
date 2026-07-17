@@ -91,7 +91,7 @@ public class AccountService {
                 .map(LedgerEntryResponse::from);
     }
 
-    Account owned(Long customerId, Long accountId) {
+    public Account owned(Long customerId, Long accountId) {
         // 404, not 403: don't leak which account ids exist.
         return accounts.findByIdAndCustomerId(accountId, customerId).orElseThrow(AccountService::notFound);
     }

@@ -11,8 +11,17 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  batch:
+    job:
+      enabled: false # jobs run on schedule or on demand, never at startup
+    jdbc:
+      initialize-schema: always
 
 ledger:
+  rate-limit:
+    transfers-per-minute: 60
+  statements:
+    dir: ${STATEMENTS_DIR:statements}
   jwt:
     # HMAC-SHA256 signing key, base64, min 32 bytes. No default: the app must not start with a guessable key.
     secret: ${JWT_SECRET}
