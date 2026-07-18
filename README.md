@@ -9,6 +9,14 @@ The interesting problem: **move money concurrently without losing a cent** —
 no lost updates, no overdrafts, no deadlocks, and every retry (client or
 queue redelivery) lands exactly once.
 
+## Live demo
+
+**https://ledger-service-xubs.onrender.com** — free-tier services sleep when idle;
+first request takes ~1 minute to wake. Try it with the shared demo account
+(`demo@ledger.dev` / `Password123!`) via Swagger's Authorize button, or register
+your own. Transfers run the full async path: `202 Accepted` → SQS → Lambda
+limit checks → settlement callback (poll `GET /transfers/{id}`).
+
 ## Architecture
 
 ```
