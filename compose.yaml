@@ -6,7 +6,8 @@ services:
       POSTGRES_USER: ledger
       POSTGRES_PASSWORD: ${DB_PASSWORD:-ledger}
     ports:
-      - "5432:5432"
+      # Host 15432: Windows Hyper-V excluded-port ranges swallow most of 5147-5763, taking 5432 with them.
+      - "15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
