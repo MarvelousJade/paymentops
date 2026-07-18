@@ -72,7 +72,8 @@ Resources:
       FunctionName: ledger-settlement
       Runtime: java21
       Handler: dev.ledger.settlement.SettlementHandler::handleRequest
-      CodeUri: ../settlement-lambda
+      # Prebuilt shaded jar: ./mvnw -f settlement-lambda/pom.xml package
+      CodeUri: ../settlement-lambda/target/settlement-lambda-0.0.1-SNAPSHOT.jar
       MemorySize: 512
       Timeout: 30
       Environment:

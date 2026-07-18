@@ -57,7 +57,7 @@ aws budgets create-budget --account-id $(aws sts get-caller-identity --query Acc
 Deploy the AWS slice:
 
 ```bash
-sam build --use-container -t infra/template.yaml   # container build; no local Maven needed
+./mvnw -f settlement-lambda/pom.xml package        # shaded Lambda jar
 sam deploy --guided -t infra/template.yaml         # prompts for ApiBaseUrl + ServiceToken
 ```
 

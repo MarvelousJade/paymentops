@@ -49,6 +49,8 @@ public class SettlementHandler implements RequestHandler<SQSEvent, SQSBatchRespo
             try {
                 process(message.getBody());
             } catch (Exception e) {
+                System.err.println("Settlement failed for message " + message.getMessageId() + ": " + e);
+                e.printStackTrace();
                 // Release the dedup claim so the SQS retry actually reprocesses;
                 // after maxReceiveCount the message lands in the DLQ.
                 stores.releaseClaim(message.getMessageId());
