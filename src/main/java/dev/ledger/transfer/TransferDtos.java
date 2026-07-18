@@ -11,6 +11,11 @@ public final class TransferDtos {
     private TransferDtos() {
     }
 
+    /** SQS payload; the Lambda runs rules on it without touching the API database. */
+    public record SettlementMessage(Long transferId, Long customerId, Long fromAccountId,
+                                    Long toAccountId, long amountCents) {
+    }
+
     public record TransferRequest(
             @NotNull Long fromAccountId,
             @NotNull Long toAccountId,

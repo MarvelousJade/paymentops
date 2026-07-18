@@ -1,5 +1,12 @@
 # Shadows the main application.yml on the test classpath — every property tests need lives here.
 spring:
+  cloud:
+    aws:
+      region:
+        static: us-east-1
+      credentials:
+        access-key: test
+        secret-key: test
   jpa:
     hibernate:
       ddl-auto: validate
@@ -11,6 +18,11 @@ spring:
       initialize-schema: always
 
 ledger:
+  settlement:
+    mode: sync
+    queue: test-settlement
+  internal:
+    token: ""
   statements:
     dir: target/test-statements
   jwt:

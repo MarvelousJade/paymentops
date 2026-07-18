@@ -23,7 +23,7 @@ import java.util.Base64;
 
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties(JwtProps.class)
+@EnableConfigurationProperties({JwtProps.class, dev.ledger.transfer.SettlementProps.class})
 public class SecurityConfig {
 
     @Bean
@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register", "/auth/login", "/auth/refresh").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        // Service-to-service: authenticated by X-Service-Token inside the controller, not JWT.
+                        .requestMatchers("/internal/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
                 .build();

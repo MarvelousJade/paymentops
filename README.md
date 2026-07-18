@@ -37,6 +37,24 @@ docker compose up -d db
 Swagger UI: http://localhost:8080/swagger-ui.html
 Health: http://localhost:8080/actuator/health
 
+## Async settlement (AWS)
+
+Local dev runs `SETTLEMENT_MODE=sync` (no AWS needed). In async mode
+`POST /transfers` returns `202 Accepted` and publishes to SQS; a Java 21 Lambda
+runs limit/velocity checks (DynamoDB dedup + counters) and calls back into
+`/internal/transfers/{id}/settle|fail` with a service token. Poison messages hit
+the DLQ after 3 attempts; a CloudWatch alarm fires on DLQ depth > 0.
+
+Deploy the AWS slice (needs AWS credentials configured):
+
+```bash
+sam build --use-container -t infra/template.yaml   # container build; no local Maven needed
+sam deploy --guided -t infra/template.yaml         # prompts for ApiBaseUrl + ServiceToken
+```
+
+Then set on the API host: `SETTLEMENT_MODE=async`, `SETTLEMENT_QUEUE=<QueueUrl output>`,
+`SERVICE_TOKEN=<same value>`, plus AWS credentials for SQS publish.
+
 ## Key decisions
 
 See [DECISIONS.md](DECISIONS.md).

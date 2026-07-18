@@ -5,7 +5,10 @@ import dev.ledger.account.AccountRepository;
 import dev.ledger.account.LedgerEntry;
 import dev.ledger.account.LedgerEntryRepository;
 import dev.ledger.common.ApiException;
+import dev.ledger.transfer.TransferDtos.SettlementMessage;
 import dev.ledger.transfer.TransferDtos.TransferResponse;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,14 +22,19 @@ public class TransferService {
     private final LedgerEntryRepository ledgerEntries;
     private final RateLimiter rateLimiter;
     private final TransactionTemplate tx;
+    private final SettlementProps settlementProps;
+    private final ObjectProvider<SqsTemplate> sqsTemplate;
 
     public TransferService(TransferRepository transfers, AccountRepository accounts,
-                           LedgerEntryRepository ledgerEntries, RateLimiter rateLimiter, TransactionTemplate tx) {
+                           LedgerEntryRepository ledgerEntries, RateLimiter rateLimiter, TransactionTemplate tx,
+                           SettlementProps settlementProps, ObjectProvider<SqsTemplate> sqsTemplate) {
         this.transfers = transfers;
         this.accounts = accounts;
         this.ledgerEntries = ledgerEntries;
         this.rateLimiter = rateLimiter;
         this.tx = tx;
+        this.settlementProps = settlementProps;
+        this.sqsTemplate = sqsTemplate;
     }
 
     /**
@@ -41,7 +49,13 @@ public class TransferService {
 
         var existing = transfers.findByCustomerIdAndIdempotencyKey(customerId, idempotencyKey);
         if (existing.isPresent()) {
-            return TransferResponse.from(existing.get());
+            Transfer transfer = existing.get();
+            // Async replay of a still-PENDING transfer re-publishes: heals a lost message,
+            // and the Lambda-side dedup plus the PENDING-only settle guard absorb duplicates.
+            if (transfer.getStatus() == Transfer.Status.PENDING && settlementProps.isAsync()) {
+                publish(transfer);
+            }
+            return TransferResponse.from(transfer);
         }
 
         if (fromAccountId.equals(toAccountId)) {
@@ -65,7 +79,42 @@ public class TransferService {
                     .orElseThrow(() -> e));
         }
 
+        if (settlementProps.isAsync()) {
+            Transfer pending = transfers.findById(transferId).orElseThrow();
+            publish(pending);
+            return TransferResponse.from(pending);
+        }
         return tx.execute(status -> TransferResponse.from(settle(transferId)));
+    }
+
+    private void publish(Transfer transfer) {
+        sqsTemplate.getObject().send(settlementProps.queue(), new SettlementMessage(
+                transfer.getId(), transfer.getCustomerId(), transfer.getFromAccountId(),
+                transfer.getToAccountId(), transfer.getAmountCents()));
+    }
+
+    /** Lambda callback. Idempotent: anything past PENDING is returned untouched, so SQS redeliveries are no-ops. */
+    public TransferResponse settleInternal(Long transferId) {
+        return tx.execute(status -> {
+            Transfer transfer = transfers.findById(transferId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Transfer not found"));
+            if (transfer.getStatus() != Transfer.Status.PENDING) {
+                return TransferResponse.from(transfer);
+            }
+            return TransferResponse.from(settle(transferId));
+        });
+    }
+
+    /** Lambda callback for rejected transfers. Same idempotency contract as settleInternal. */
+    public TransferResponse failInternal(Long transferId, String reason) {
+        return tx.execute(status -> {
+            Transfer transfer = transfers.findById(transferId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Transfer not found"));
+            if (transfer.getStatus() == Transfer.Status.PENDING) {
+                transfer.fail(reason);
+            }
+            return TransferResponse.from(transfer);
+        });
     }
 
     private Transfer settle(Long transferId) {

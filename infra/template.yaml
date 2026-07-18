@@ -1,0 +1,122 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: ledger-service async settlement - SQS + Lambda + DynamoDB dedup/velocity + DLQ alarm
+
+Parameters:
+  ApiBaseUrl:
+    Type: String
+    Description: Public base URL of the ledger API (e.g. https://ledger.up.railway.app)
+  ServiceToken:
+    Type: String
+    NoEcho: true
+    Description: Shared secret for the API's /internal endpoints
+  MaxSingleCents:
+    Type: Number
+    Default: 100000 # $1,000.00
+  DailyLimitCents:
+    Type: Number
+    Default: 500000 # $5,000.00 per account per day
+  PerMinuteLimit:
+    Type: Number
+    Default: 5
+
+Resources:
+  SettlementQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ledger-settlement
+      VisibilityTimeout: 180 # 6x the Lambda timeout
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt SettlementDLQ.Arn
+        maxReceiveCount: 3
+
+  SettlementDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ledger-settlement-dlq
+      MessageRetentionPeriod: 1209600 # 14 days to investigate poison messages
+
+  DedupTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ledger-dedup
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  VelocityTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ledger-velocity
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  SettlementFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ledger-settlement
+      Runtime: java21
+      Handler: dev.ledger.settlement.SettlementHandler::handleRequest
+      CodeUri: ../settlement-lambda
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          API_BASE_URL: !Ref ApiBaseUrl
+          SERVICE_TOKEN: !Ref ServiceToken
+          DEDUP_TABLE: !Ref DedupTable
+          VELOCITY_TABLE: !Ref VelocityTable
+          MAX_SINGLE_CENTS: !Ref MaxSingleCents
+          DAILY_LIMIT_CENTS: !Ref DailyLimitCents
+          PER_MINUTE_LIMIT: !Ref PerMinuteLimit
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DedupTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VelocityTable
+      Events:
+        Settlement:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SettlementQueue.Arn
+            BatchSize: 10
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+
+  DlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ledger-settlement-dlq-depth
+      AlarmDescription: Any message in the settlement DLQ needs a human
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt SettlementDLQ.QueueName
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+Outputs:
+  QueueUrl:
+    Value: !Ref SettlementQueue
+  DlqUrl:
+    Value: !Ref SettlementDLQ

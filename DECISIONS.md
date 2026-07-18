@@ -68,3 +68,26 @@ alternative is EventBridge Scheduler hitting an endpoint or launching a task —
 right when there are multiple instances (in-process cron would fire once per
 instance) or when the app scales to zero. One Railway instance makes @Scheduled
 the honest choice; the job code wouldn't change, only the trigger.
+
+## 8. Two idempotency layers, on purpose
+
+Client layer: the `Idempotency-Key` unique constraint in Postgres makes retried
+`POST /transfers` return the original transfer. Message layer: the Lambda does a
+DynamoDB conditional put on the SQS message id (TTL 1h) because SQS standard
+queues are at-least-once — the same message can arrive twice even when the client
+behaved perfectly. They guard different failure modes: flaky clients vs. queue
+redelivery. The settle endpoint is additionally a no-op past PENDING, so even a
+message that slips both layers cannot move money twice. On a downstream failure
+the Lambda releases its dedup claim so the SQS retry reprocesses instead of
+vanishing; velocity counters may over-count on retry, which only rejects sooner —
+the safe direction for limits.
+
+## 9. Lambda calls back into the API; it never touches Postgres
+
+The Lambda approves or rejects, then calls `/internal/transfers/{id}/settle|fail`
+authenticated by a shared service token. Lambda→JDBC was rejected: each concurrent
+Lambda execution would hold its own connection (no pool sharing across sandboxes),
+cold starts would pay for driver + pool init, and a second writer would duplicate
+the locking discipline. Keeping Spring as the single database writer means the
+pessimistic-locking settlement path has exactly one implementation. The Lambda is
+plain Java (no Spring) for the same cold-start reason.
