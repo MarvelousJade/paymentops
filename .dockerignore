@@ -1,0 +1,6 @@
+target
+settlement-lambda
+statements
+.git
+.env
+*.md
