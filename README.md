@@ -45,7 +45,16 @@ runs limit/velocity checks (DynamoDB dedup + counters) and calls back into
 `/internal/transfers/{id}/settle|fail` with a service token. Poison messages hit
 the DLQ after 3 attempts; a CloudWatch alarm fires on DLQ depth > 0.
 
-Deploy the AWS slice (needs AWS credentials configured):
+First time only — credentials and the $5 budget alarm:
+
+```bash
+aws configure                        # paste access key, secret, region (e.g. us-east-1)
+aws budgets create-budget --account-id $(aws sts get-caller-identity --query Account --output text) \
+  --budget '{"BudgetName":"ledger-cap","BudgetLimit":{"Amount":"5","Unit":"USD"},"TimeUnit":"MONTHLY","BudgetType":"COST"}' \
+  --notifications-with-subscribers '[{"Notification":{"NotificationType":"ACTUAL","ComparisonOperator":"GREATER_THAN","Threshold":80},"Subscribers":[{"SubscriptionType":"EMAIL","Address":"YOUR_EMAIL"}]}]'
+```
+
+Deploy the AWS slice:
 
 ```bash
 sam build --use-container -t infra/template.yaml   # container build; no local Maven needed
