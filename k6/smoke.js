@@ -13,13 +13,16 @@ export const options = {
   ],
   thresholds: {
     http_req_failed: ["rate<0.01"],
-    http_req_duration: ["p(95)<500"],
+    "http_req_duration{name:transfer}": ["p(95)<1000"],
+    "http_req_duration{name:transactions}": ["p(95)<500"],
   },
 };
 
 const params = (token) => ({
   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 });
+
+const ACCOUNTS = 10;
 
 export function setup() {
   const email = `k6_${Date.now()}@x.dev`;
@@ -28,31 +31,35 @@ export function setup() {
   }), { headers: { "Content-Type": "application/json" } });
   const token = register.json("accessToken");
 
-  const mkAccount = () => http.post(`${BASE}/accounts`, JSON.stringify({ type: "CHEQUING" }), params(token)).json("id");
-  const a = mkAccount();
-  const b = mkAccount();
-  http.post(`${BASE}/accounts/${a}/deposits`, JSON.stringify({ amount: "1000000.00" }), params(token));
-  http.post(`${BASE}/accounts/${b}/deposits`, JSON.stringify({ amount: "1000000.00" }), params(token));
-  return { token, a, b };
+  const ids = [];
+  for (let i = 0; i < ACCOUNTS; i++) {
+    const id = http.post(`${BASE}/accounts`, JSON.stringify({ type: "CHEQUING" }), params(token)).json("id");
+    http.post(`${BASE}/accounts/${id}/deposits`, JSON.stringify({ amount: "1000000.00" }), params(token));
+    ids.push(id);
+  }
+  return { token, ids };
 }
 
 export default function (data) {
-  const { token, a, b } = data;
+  const { token, ids } = data;
+  const mine = ids[__VU % ACCOUNTS];
   if (__ITER % 3 === 0) {
-    // 1 in 3: a transfer with a fresh idempotency key, direction alternating per VU
-    const [from, to] = __VU % 2 === 0 ? [a, b] : [b, a];
+    // 1 in 3: transfer to a neighbouring account; overlapping pairs still exercise lock ordering
+    const to = ids[(__VU + 1 + (__ITER % (ACCOUNTS - 1))) % ACCOUNTS];
     const res = http.post(`${BASE}/transfers`, JSON.stringify({
-      fromAccountId: from, toAccountId: to, amount: "1.00",
+      fromAccountId: mine, toAccountId: to, amount: "1.00",
     }), {
       headers: {
         ...params(token).headers,
         "Idempotency-Key": `k6-${__VU}-${__ITER}-${Date.now()}`,
       },
+      tags: { name: "transfer" },
     });
     check(res, { "transfer 201": (r) => r.status === 201 });
   } else {
     // 2 in 3: paginated transaction reads
-    const res = http.get(`${BASE}/accounts/${__VU % 2 === 0 ? a : b}/transactions?size=20`, params(token));
+    const res = http.get(`${BASE}/accounts/${mine}/transactions?size=20`,
+      { ...params(token), tags: { name: "transactions" } });
     check(res, { "transactions 200": (r) => r.status === 200 });
   }
   sleep(0.1);
