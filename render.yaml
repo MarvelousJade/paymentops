@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ledger-service
+    runtime: docker
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: DATABASE_URL # entrypoint.sh converts to jdbc + split creds
+        fromDatabase:
+          name: ledger-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SERVICE_TOKEN
+        sync: false # paste the value used in `sam deploy`
+      - key: SETTLEMENT_MODE
+        value: sync # flip to async once AWS creds + queue URL are set
+      - key: LOGGING_STRUCTURED_FORMAT_CONSOLE
+        value: ecs
+
+databases:
+  - name: ledger-db
+    plan: free
+    databaseName: ledger
+    user: ledger

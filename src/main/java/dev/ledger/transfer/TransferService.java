@@ -8,6 +8,7 @@ import dev.ledger.common.ApiException;
 import dev.ledger.transfer.TransferDtos.SettlementMessage;
 import dev.ledger.transfer.TransferDtos.TransferResponse;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -24,10 +25,12 @@ public class TransferService {
     private final TransactionTemplate tx;
     private final SettlementProps settlementProps;
     private final ObjectProvider<SqsTemplate> sqsTemplate;
+    private final MeterRegistry meters;
 
     public TransferService(TransferRepository transfers, AccountRepository accounts,
                            LedgerEntryRepository ledgerEntries, RateLimiter rateLimiter, TransactionTemplate tx,
-                           SettlementProps settlementProps, ObjectProvider<SqsTemplate> sqsTemplate) {
+                           SettlementProps settlementProps, ObjectProvider<SqsTemplate> sqsTemplate,
+                           MeterRegistry meters) {
         this.transfers = transfers;
         this.accounts = accounts;
         this.ledgerEntries = ledgerEntries;
@@ -35,6 +38,7 @@ public class TransferService {
         this.tx = tx;
         this.settlementProps = settlementProps;
         this.sqsTemplate = sqsTemplate;
+        this.meters = meters;
     }
 
     /**
@@ -84,7 +88,9 @@ public class TransferService {
             publish(pending);
             return TransferResponse.from(pending);
         }
-        return tx.execute(status -> TransferResponse.from(settle(transferId)));
+        TransferResponse response = tx.execute(status -> TransferResponse.from(settle(transferId)));
+        meters.counter("ledger.transfers", "status", response.status().name()).increment();
+        return response;
     }
 
     private void publish(Transfer transfer) {
@@ -101,7 +107,9 @@ public class TransferService {
             if (transfer.getStatus() != Transfer.Status.PENDING) {
                 return TransferResponse.from(transfer);
             }
-            return TransferResponse.from(settle(transferId));
+            Transfer settled = settle(transferId);
+            meters.counter("ledger.transfers", "status", settled.getStatus().name()).increment();
+            return TransferResponse.from(settled);
         });
     }
 
@@ -112,6 +120,7 @@ public class TransferService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Transfer not found"));
             if (transfer.getStatus() == Transfer.Status.PENDING) {
                 transfer.fail(reason);
+                meters.counter("ledger.transfers", "status", "FAILED").increment();
             }
             return TransferResponse.from(transfer);
         });
