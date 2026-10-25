@@ -43,4 +43,9 @@
 - Corrected documentation overclaims: the inherited Kafka crash timeline was hypothetical, Schema Registry registration is not producer validation, webhook requeue does not exist, hosted/security workflows have not been executed here. Release publication now requires manual dispatch rather than an automatic push trigger. No deployment was attempted.
 - Verification: packaged jar launched on native PostgreSQL with local transport; after waiting for health UP (20.385 s startup in the log), the first HTTP demo passed, including partial/full refunds, replay conflicts, cross-merchant denial, final balances and reconciliation. An initial health/registration probe preceded startup and got connection refused; waited for readiness rather than changing behavior. This is setup timing, not an application bug.
 - Demo decisions: Node's built-in HTTP/assertion libraries, no npm dependency; loopback restriction and externally provisioned operator prevent accidental fixture use remotely or public role elevation. New users per run avoid rate-limit/risk interference. First smoke timings are not optimization evidence.
+
+## CTRL-001 — request identity checkpoint
+
+Provenance: intentionally introduced on isolated `shaoyu/learning` from verified `02ac6a1`. The retry identity comparison now omits the amount field. This faulty checkpoint is retained for controlled reproduction; it does not describe behavior previously observed in production or on `main`. Learner-facing symptoms are in `debugging/README.md`; investigation/test evidence and repair follow separately.
+
 - Verification beyond the app: settlement Lambda 9/9 unit/handler tests passed in 32.290 s; no AWS execution claimed. Docker/Compose clients were downloaded outside Git for config validation only, not an engine install.
