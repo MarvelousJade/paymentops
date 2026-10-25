@@ -32,6 +32,11 @@ build/
 ### VS Code ###
 .vscode/
 
+### Local tool configuration ###
+/.claude/
+/.pi/
+/.agents/
+
 ### Runtime output ###
 statements/
 .env
