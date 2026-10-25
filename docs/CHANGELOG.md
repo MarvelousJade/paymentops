@@ -18,6 +18,6 @@
 - Kafka/Registry/dashboards are optional configurations; actual broker recovery and container execution remain unverified here. Registry registration is not producer schema enforcement.
 - Simulated webhooks; no audited delivery requeue API. Receiver idempotency/replay protection and secure endpoint management would be required for real delivery.
 - Local identity, in-memory rate limiting, public health/metrics, development secrets/defaults and exposed Compose ports require a production threat model before shared deployment. No production-readiness claim.
-- Hosted CI/security/deploy workflows have not run in this task; dependency/image findings are not claimed clean. No publication/push performed. No repository distribution licence has been selected; settle licensing before public distribution.
+- Local checks do not establish hosted CI/security/deployment success; publication-time results are available in GitHub Actions. Dependency/image findings are not claimed clean. Repository main was subsequently pushed with owner authorization; no deployment was performed. No repository distribution licence has been selected; public source availability does not grant an open-source licence.
 - No Docker engine/WSL distribution: legacy LocalStack integration and Docker lifecycle are not covered by the native PostgreSQL run.
 - Browser checks are programmatic and initial-screen visual inspection, not human usability/accessibility/mobile evaluation.

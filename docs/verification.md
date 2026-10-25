@@ -48,4 +48,4 @@ The failed setup run was not an application regression: this minimal PostgreSQL 
 
 ## Remaining gaps
 
-Docker/Compose image startup, actual Kafka redelivery/rebalance/offset recovery, Schema Registry interoperability, hosted workflows/security scanners and AWS/LocalStack are not established by these checks. Historical ledger load measurements are not new release measurements. No deployment or publication is performed. Initial screenshot inspection is not a usability study. More limitations: CHANGELOG.md.
+Docker/Compose image startup, actual Kafka redelivery/rebalance/offset recovery, Schema Registry interoperability, hosted workflows/security scanners and AWS/LocalStack are not established by these checks. Historical ledger load measurements are not new release measurements. Repository publication was subsequently authorized and completed (see journal); no deployment was performed. Initial screenshot inspection is not a usability study. More limitations: CHANGELOG.md.

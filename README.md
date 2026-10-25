@@ -75,7 +75,7 @@ docker compose --profile platform up --build
 
 This adds Kafka, Schema Registry, OpenTelemetry Collector, Prometheus, Grafana, Tempo, Loki and supporting exporters. Start/order availability is handled by outbox retries; default local mode does not need these services. Schema registration is illustrative: the producer currently sends JSON strings and does not enforce Registry schemas. Actual broker recovery and dashboard rendering remain unverified on the current host.
 
-GitHub workflows define CI and security checks. Staging publication is **manual** and requires configured protected environments/secrets; no push, deployment or publication is part of this release.
+GitHub workflows define CI and security checks. Publishing the repository does not deploy the application: staging image publication/deployment is **manual** and requires configured protected environments/secrets. Hosted check results are available in GitHub Actions; local verification is documented separately.
 
 ## Read next
 
