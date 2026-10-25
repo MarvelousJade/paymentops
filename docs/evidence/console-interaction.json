@@ -1,0 +1,17 @@
+{
+  "kind": "programmatic-chrome-interaction",
+  "date": "2026-10-25T23:28:35.287Z",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+  "checks": [
+    "invalid token displays 401",
+    "operator connects",
+    "correlation search returns saved payment",
+    "repeat search",
+    "empty exceptions",
+    "run reconciliation then refresh",
+    "missing dead letter displays 404",
+    "correlation input preserved"
+  ],
+  "paymentId": "a02e8c33-2b32-4877-8f49-00ddf1938504",
+  "result": "passed"
+}

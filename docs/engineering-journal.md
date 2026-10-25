@@ -1,0 +1,100 @@
+# Engineering journal
+
+## 2026-10-25 — baseline and environment hurdle
+
+- Starting commit: `9316c46`. The authorized working tree already contained a large PaymentOps implementation, infrastructure and docs. Preserve that provenance rather than manufacture earlier increments. `.claude/skills/verify/SKILL.md` is unrelated and stays uncommitted; existing staged `AGENTS.md` is preserved.
+- Problem/constraint: neither Java nor Docker was on PATH; Windows command discovery found neither installation and WSL reported no distributions. This is an environment constraint, not an application defect.
+- Approach: downloaded portable Temurin JDK 21 and PostgreSQL 16.4 binary artifact outside the repository. Avoid installing Docker/WSL or changing system configuration. Testcontainers remains the default; an explicit external disposable DB option will permit genuine SQL/transaction testing here.
+- Baseline observation: unchanged pending application compiled; `./mvnw -B -Dtest=MoneyTest,AuthServiceTest,RateLimiterTest test` passed 9 tests, 0 failed/errors/skipped (Maven 1:38 including downloads). This does not verify the payment workflow. Historical `target` reports were not treated as current results.
+- Tradeoff: native PostgreSQL verifies real database semantics but not container startup, Kafka or Compose. Portable tool files/data remain outside Git. Lesson: record environment limits and seek a safe equivalent test layer instead of silently skipping integration tests.
+- Setup mistake: the portable PostgreSQL distribution lacks `createdb`; the shell sequence continued and the first DB run had 30 context errors out of 39 tests because `paymentops_test` did not exist. Inspection of the first `FATAL` distinguished database setup from application failure. Created the disposable databases through JDBC and reran: 39 passed, 0 failures/errors/skips in 56.982 s. No application repair or regression test was appropriate for this setup mistake; fail-fast setup commands prevent it.
+- Personal investigation notes: not supplied. Statements here describe repository work/evidence, not claims about what the owner personally investigated.
+
+## BUG-001 — concurrent consumer claim poisons its transaction
+
+- Origin/affected source: existing pending implementation, preserved in `011bfe6`; naturally identified by source inspection, not an injected defect.
+- Problem: duplicate event delivery should be a successful no-op; the losing concurrent consumer instead failed at commit with `UnexpectedRollbackException`. Financial duplication was not observed; retry churn is the demonstrated impact.
+- Reproduction: `EventIdempotencyTest.concurrentDeliveryCommitsOneEffectAndReturnsDuplicateWithoutTransactionFailure`. Hold the first transaction inside its effect; start the second delivery; query `pg_stat_activity` to confirm the second is blocked on `processed_events`; release the first. Both calls must return, one true/one false, and only one outgoing effect must exist.
+- Hypotheses/evidence: sequential replay alone could not exercise the race. The first regression run produced 1 error in 2 tests, explicitly rollback-only at commit. The database wait confirmed contention on the claim, not an unrelated account lock. No deadlock was observed.
+- Root cause: check-then-insert raced; catching `DataIntegrityViolationException` did not repair the PostgreSQL transaction or Spring rollback-only marker. JPA save/merge is not a conflict-safe claim primitive.
+- Fix: one native `INSERT ... ON CONFLICT (consumer_name,event_id) DO NOTHING`; inspect affected-row count. It waits for competing claims without raising a uniqueness error, and remains in the same transaction as the effect.
+- Alternatives/tradeoffs: a separate committed claim could lose work when effects fail; pessimistic locks cannot lock an absent row. PostgreSQL-specific SQL is accepted because PostgreSQL is already required. Transaction rollback still releases a failed claim.
+- Verification: targeted run before fix: 2 tests, 1 error. After fix: EventIdempotencyTest + PaymentOpsFlowTest, 6 passed, 0 failures/errors/skips, 32.218 s. Rollback test proves both outgoing effect and claim disappear on failure, then retry succeeds once. Summaries: `docs/evidence/bug-001-*`.
+- Prevention/design implication: model durable deduplication as an atomic database claim, not a caught constraint violation inside a live transaction.
+- Interview explanation: concurrent replay exposed a transaction-boundary bug missed by sequential tests; a measured PostgreSQL lock wait made the reproduction controlled; conflict-safe insertion preserved atomic claim/effect rollback without sacrificing harmless duplicate responses. This is local integration evidence, not a production incident.
+- Fix commit: `ab86d88`.
+
+## BUG-002 — early refund hides external settlement
+
+- Origin/affected source: existing implementation in `011bfe6`, reproduced from `ab86d88`; found by tracing status guards and deliberately reordering valid messages, not by injecting faulty code.
+- Problem/impact: refunds are accepted after CAPTURED, but the settlement consumer returned unless status was exactly CAPTURED. An early partial refund produced no external settled record. A later capture retry also returned 409, and reconcileAll omitted refunded payments.
+- Reproduction: `PaymentOpsFlowTest.refundBeforeSettlementDoesNotDiscardSettlementAndCaptureRetryRemainsSafe`. Capture once, hold capture-posted delivery, request/refund 10 of 30 CAD, then deliver capture-posted. Separate Kafka topics do not establish a global ordering; the test routes through real transactional handlers without a broker.
+- Investigation: suspected status coupling rather than ledger duplication. Database assertions confirmed PARTIALLY_REFUNDED and two postings; regression failed with expected settlement size 1, actual 0. The consumer's CAPTURED-only guard explained the absence. No Kafka crash or production incident was observed.
+- Fix: allow settlement for captured/partially/fully refunded payments without overwriting refund state; use retained settled/rejected records to prevent repeated terminal evidence; reconciliation selects payments with an actual capture posting; capture replay accepts post-refund states.
+- Tradeoffs: settlement and refund are orthogonal facts represented by payment status plus settlement records rather than a new state-machine dimension/schema migration. This is smaller but callers must inspect settlement records/timeline, not infer all settlement facts from payment status. Refunding after simulated settlement rejection remains outside the supported workflow.
+- Verification: new integration test failed once (1 failure, 0 errors) before repair, then combined event/payment suite passed 7/7 in 40.180 s. Checks include retained partial-refund state, one settlement, detection of a later amount mismatch on reconcileAll, and harmless capture replay. See `docs/evidence/bug-002-*`.
+- Lesson/interview explanation: independent asynchronous processes must not discard valid evidence merely because another process advanced an aggregate's status. Reorder valid events in integration tests; sequential happy paths cannot establish ordering safety.
+- Fix commit: `ccff3e4`.
+
+## 2026-10-25 — minimal runtime and evidence review
+
+- Hurdle: the pending Compose setup forced Kafka/Schema Registry and ten supporting services into a simple demo. Existing local transport already supported the full workflow. Chose profiles over deleting infrastructure: default db+app, opt-in platform profile, opt-in tracing export. Tradeoff: Kafka readiness is eventually handled by bounded outbox retries, not a mandatory startup dependency.
+- Source-found container defect (BUG-003, existing pending configuration): Compose healthcheck invoked `wget`, while the new runtime image explicitly installs `curl`, not wget. Changed the healthcheck to curl. Both Compose profiles parse successfully with standalone Compose 2.39.4; container execution cannot be verified without an engine. This is source evidence, not an observed container outage.
+- Corrected documentation overclaims: the inherited Kafka crash timeline was hypothetical, Schema Registry registration is not producer validation, webhook requeue does not exist, hosted/security workflows have not been executed here. Release publication now requires manual dispatch rather than an automatic push trigger. No deployment was attempted.
+- Verification: packaged jar launched on native PostgreSQL with local transport; after waiting for health UP (20.385 s startup in the log), the first HTTP demo passed, including partial/full refunds, replay conflicts, cross-merchant denial, final balances and reconciliation. An initial health/registration probe preceded startup and got connection refused; waited for readiness rather than changing behavior. This is setup timing, not an application bug.
+- Demo decisions: Node's built-in HTTP/assertion libraries, no npm dependency; loopback restriction and externally provisioned operator prevent accidental fixture use remotely or public role elevation. New users per run avoid rate-limit/risk interference. First smoke timings are not optimization evidence.
+- Verification beyond the app: settlement Lambda 9/9 unit/handler tests passed in 32.290 s; no AWS execution claimed. Docker/Compose clients were downloaded outside Git for config validation only, not an engine install.
+
+## CTRL-001 — request identity checkpoint
+
+Provenance: intentionally introduced on isolated `shaoyu/learning` from verified `02ac6a1`; faulty checkpoint `166bf59`. This does not describe a production incident or a defect on `main`. Learner-facing symptoms are in `debugging/README.md`; diagnoses remain separate.
+
+- Problem/reproduction: same key with 30.00 then 31.00 returned 202 instead of 409. `PaymentOpsFlowTest.sameCreateKeyRejectsChangedAmountWithoutCreatingFinancialEffects` runs real HTTP calls; the fault produced 1 failure/1 test in 33.490 s.
+- Hypothesis/evidence: request parsing versus payload identity. Both responses were accepted with the same ID; source review confirmed that amount alone was omitted from the equality guard. The test isolates pre-capture behavior, so event ordering cannot explain the mismatch. No other attempted diagnosis is claimed.
+- Root cause/fix: identity comparison omitted a financially significant field. Restore the amount comparison alongside source/destination/currency/token. This restores already-correct behavior from the implementation baseline, not a new fix to main.
+- Tradeoff: explicit field comparison is easy to inspect but requires updating when adding request fields. A canonical request hash is an alternative but introduces serialization/versioning questions unnecessary for this schema.
+- Verification: repaired PaymentOpsFlowTest passed 6/6, 0 errors/skips in 29.080 s. Test checks conflict code, retained original amount, zero financial postings and unchanged source balance. `docs/evidence/ctrl-001-*` preserves failing/passing summaries.
+- Lesson/interview explanation: idempotency is identity plus replay, not simply looking up a key. Strengthen HTTP tests so field omissions are detected. Personal investigation notes remain unprovided.
+
+## CTRL-002 — publication bookkeeping checkpoint
+
+Provenance: intentionally introduced on isolated `shaoyu/learning` after CTRL-001 repair; faulty checkpoint `3674349`. Baseline working behavior already publishes only after successful send. No production incident is implied.
+
+- Problem/reproduction: with a throwing transport, a single dispatch left the event PUBLISHED instead of PENDING, so a real due-query would no longer select it. `OutboxDispatcherTest` uses disposable in-memory objects/mocked repository and transport, not a stopped real service.
+- Investigation/hypotheses: retry filtering versus state mutation order. Tests inspect state during send and after failure; first run had 3 failures/3 tests, showing premature PUBLISHED and a non-null publication timestamp. The failure counter was insufficient evidence of recoverability. No actual broker outage was observed.
+- Root cause: published() ran before transport.send(); the failure handler increments attempts/backoff but assumes the prior status is still pending. Moving publication after acknowledgement restores that invariant.
+- Fix/tradeoffs: restore baseline send-then-publish ordering. This still permits duplicate send if the process crashes after transport acknowledgement and before saving publication; durable consumer idempotency handles that accepted at-least-once window. Marking before send trades duplicates for potential lost delivery and is not acceptable.
+- Verification: new unit tests cover failure→retry→success, bounded dead letter/replay reset, and state at transport acknowledgement. Failing 3/3 in 14.875 s; repaired combined outbox/idempotency/payment tests passed 11/11, 0 failures/errors/skips in 36.326 s. Mock due-events are supplied again to avoid sleeps; database due-query behavior is not established by these unit tests. See `docs/evidence/ctrl-002-*`.
+- Lesson/interview explanation: event state must describe completed external work, not intended work; test both retry eligibility and success ordering. Final integration contributes regression coverage while restoring already-correct implementation code. Repair: `ce8b501`; corrected branch integrated via merge `a249277`.
+
+## BUG-004 — expired-token fixture cannot run twice on retained PostgreSQL
+
+- Origin: existing test from ledger baseline (`9316c46`), not an intentional fault. Discovered during broader verification after integration; affected test is `AuthFlowTest.expiredRefreshTokenIs401`.
+- Expected/actual: repeated runs against a disposable but retained database should verify HTTP 401. The second full-suite run had 48 tests, 1 error (no assertion failures), duplicate `refresh_tokens_token_hash_key`, before issuing the refresh request.
+- Investigation: inspected the first SQL error and test line 128. The fixed raw string `expired-raw` produced the same globally unique hash on each run; unique customer emails did not isolate the token fixture. Application auth behavior was not the failing boundary. No credential/expiry theory was needed after the constraint evidence.
+- Fix: generate a unique expired raw token per invocation, while keeping its persisted expiry in the past. No production code changes. Tradeoff: randomized identity removes cross-run collision; expiry behavior remains deterministic. A clean database per run remains recommended.
+- Verification: AuthFlowTest passed 6/6 twice on the same retained database, 31.410 s and 28.390 s respectively. Historical failing summary and separate passing summaries: `docs/evidence/bug-004-*`. Do not combine these into an inflated unique-test count.
+- Lesson/interview explanation: repeatable integration fixtures require uniqueness at every constrained key, not just user identity. Repeated verification exposed a test-isolation mistake rather than a production auth incident. Fix commit: `e772520`.
+
+## BUG-005 — fixed delay did not suppress the initial scheduled dispatch
+
+- Origin: existing pending scheduler configuration in `011bfe6`, naturally observed in native PostgreSQL suite logs: a configuration-only Kafka test attempted sends without a broker. Long poll-delay values were intended to leave dispatch under test control.
+- Reproduction: add a dispatcher spy to KafkaConfigurationTest and assert never-dispatched. Before fix this failed 1/1 with NeverWantedButInvoked, 57.342 s; producer connection attempts were observed. This is a test-isolation defect, not evidence of a Kafka outage.
+- Investigation/root cause: `@Scheduled(fixedDelay=...)` delays repetitions after the first invocation, not the first invocation itself. Shared retained test rows made the unsolicited startup poll visible. Listener/admin auto-startup flags do not control the application's own dispatcher.
+- Fix: independently configurable initial delays for outbox and webhook schedules (production default unchanged at zero); tests use one hour and call dispatch explicitly. Regression spy verifies no scheduled dispatch in the configuration-only test.
+- Tradeoffs: manual drains test consumers deterministically but do not establish real scheduler timing; the packaged HTTP demo separately runs the actual scheduler. No speedup is claimed from these changed test conditions.
+- Verification: full native PostgreSQL Maven verify passed 48/48, 0 failures/errors/skips in 55.952 s; includes the pending expanded insufficient-funds/cancellation/concurrent-create cases. Evidence in `docs/evidence/bug-005-failing.txt` and `final-postgres.txt`.
+- Lesson/interview explanation: distinguish scheduling period from startup policy; control asynchronous work explicitly in tests instead of relying on large delays.
+
+## 2026-10-25 — Windows build-artifact locking hurdle
+
+A preceding verify run passed all 48 tests but failed at Spring Boot repackage because the running demo JVM held the target jar open and Maven could not rename it. This was an environment/lifecycle mistake during verification, not an application test failure. Stopped only the demo process started for this task, then reran verify successfully. For further demos, copy the built jar outside target before launching so builds cannot overwrite the running artifact. Preserve the unfavorable build result in `docs/evidence/build-locked-jar.txt`. No application repair was needed.
+
+## 2026-10-25 — final measurements and runtime evidence
+
+- Named application source: `c8a3b85`; copied jar SHA-256 and actual environment in `evidence/measurement.json`. One warm-up then five equivalent fresh synthetic workflows, warm local JVM/native PostgreSQL, 250 ms outbox and 50 ms HTTP polling. Median 1205.397 ms, range 1186.547–1459.896 ms. No prior equivalent baseline: no improvement/throughput/production impact claimed.
+- Independent verification: `scripts/VerifyDemo.java` read-only SQL checks found 3 balanced event-linked pairs, one settlement, fully refunded 3,000 cents, 100/0 CAD balances and zero unresolved exceptions for every measured payment. Stopped/relaunched the same copied jar and repeated all five checks successfully. Startup in the measured JVM's log was 12.372 s; not compared against first-start 20.385 s because cache/migration conditions differ.
+- Actual browser: headless Chrome 156 rendered the console; inspected a 1280×1100 screenshot of initial headings/inputs/buttons/empty states (ignored target output). Programmatic interaction passed invalid-token 401, successful connection, correlation search/repeat, empty exceptions, run/refresh, missing-event 404 and preserved correlation input. No human, mobile, accessibility or usability testing claimed. Credentials cleared from the dedicated browser; no token/password evidence committed.
+- Minor documentation mistakes: a hand-entered measurement table initially transposed run order while retaining the correct median/range; compared against raw JSON and corrected before commit. Added `scripts/check-evidence.mjs` to assert sample/table/summary consistency and local document links. Removed one trailing space from a preserved failing-log excerpt found by diff check; diagnostic content unchanged.
+- Documentation/claims: created impact evidence and concise interview guide; personal contribution remains unconfirmed and suggested first-person/resume wording must be personalized honestly. Hypothetical broker drill separated from executed tests. No licence selection, deployment or push.
+- Remaining external checks are explicit: no Docker engine, real Kafka/Registry recovery, LocalStack, hosted scanners or deployment; native SQL and browser evidence do not substitute for them.

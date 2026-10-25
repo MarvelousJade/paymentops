@@ -1,0 +1,7 @@
+YAML syntax PASS .github/workflows/ci.yml
+YAML syntax PASS .github/workflows/security.yml
+YAML syntax PASS .github/workflows/release.yml
+YAML syntax PASS .github/workflows/promote.yml
+Compose default syntax PASS (2.39.4; no engine)
+Compose platform syntax PASS (2.39.4; no engine)
+JSON syntax PASS: 3 event schemas and dashboard (no contract enforcement claimed)

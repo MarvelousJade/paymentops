@@ -125,11 +125,12 @@ class AuthFlowTest {
         TokenResponse initial = register(uniqueEmail());
 
         RefreshToken stored = refreshTokens.findByTokenHash(AuthService.sha256(initial.refreshToken())).orElseThrow();
-        refreshTokens.save(new RefreshToken(stored.getCustomerId(), AuthService.sha256("expired-raw"),
+        String expiredRaw = "expired-" + UUID.randomUUID();
+        refreshTokens.save(new RefreshToken(stored.getCustomerId(), AuthService.sha256(expiredRaw),
                 Instant.now().minusSeconds(60)));
 
         client.post().uri("/auth/refresh")
-                .body(new RefreshRequest("expired-raw"))
+                .body(new RefreshRequest(expiredRaw))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }

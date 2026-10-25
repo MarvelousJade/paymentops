@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaymentOps Console</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #0b1220; color: #e5edf8; }
+    body { margin: 0; }
+    header { padding: 24px 5vw; background: #111c30; border-bottom: 1px solid #29405f; }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    header p { margin: 0; color: #9fb3cc; }
+    main { max-width: 1200px; margin: auto; padding: 24px 5vw; display: grid; gap: 18px; }
+    section { background: #111c30; border: 1px solid #29405f; border-radius: 12px; padding: 18px; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+    label { display: grid; gap: 5px; flex: 1; min-width: 220px; color: #b8c8dc; font-size: .85rem; }
+    input, select, button { font: inherit; color: inherit; background: #0b1220; border: 1px solid #3b5679; border-radius: 7px; padding: 10px; }
+    button { background: #1976d2; border-color: #1976d2; cursor: pointer; font-weight: 650; }
+    button:hover { background: #2586e5; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #08101d; padding: 14px; border-radius: 8px; min-height: 36px; }
+    .links a { color: #75baff; margin-right: 18px; }
+    .status { color: #77d7a1; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>PaymentOps Operations Console</h1>
+  <p>Payment timelines, reconciliation exceptions, dead-letter replay, and service health</p>
+</header>
+<main>
+  <section>
+    <div class="row">
+      <label>Operator or auditor access token
+        <input id="token" type="password" autocomplete="off" placeholder="Paste JWT">
+      </label>
+      <button onclick="loadHealth()">Connect</button>
+    </div>
+    <p class="links">
+      <a href="/actuator/health" target="_blank">Service health</a>
+      <a href="http://localhost:3000/d/paymentops/paymentops-operations" target="_blank">Grafana dashboard</a>
+      <a href="/swagger-ui.html" target="_blank">API documentation</a>
+    </p>
+    <pre id="health">Not connected</pre>
+  </section>
+
+  <section>
+    <h2>Find payment</h2>
+    <div class="row">
+      <label>Correlation ID
+        <input id="correlation" placeholder="UUID">
+      </label>
+      <button onclick="searchPayment()">Search timeline</button>
+    </div>
+    <pre id="payments">No search run</pre>
+  </section>
+
+  <section>
+    <h2>Reconciliation exceptions</h2>
+    <div class="row">
+      <label>Status
+        <select id="exceptionStatus">
+          <option value="">All</option>
+          <option>OPEN</option>
+          <option>ACKNOWLEDGED</option>
+          <option>RESOLVED</option>
+        </select>
+      </label>
+      <button onclick="loadExceptions()">Refresh exceptions</button>
+      <button onclick="runReconciliation()">Run reconciliation</button>
+    </div>
+    <pre id="exceptions">Not loaded</pre>
+  </section>
+
+  <section>
+    <h2>Replay approved dead-letter event</h2>
+    <div class="row">
+      <label>Outbox event ID
+        <input id="deadLetterId" placeholder="UUID from incident or alert">
+      </label>
+      <button onclick="replay()">Replay event</button>
+    </div>
+    <pre id="replayResult">No replay requested</pre>
+  </section>
+</main>
+<script>
+  const token = () => document.getElementById("token").value.trim();
+  async function api(path, options = {}) {
+    const response = await fetch(path, {
+      ...options,
+      headers: {"Authorization": `Bearer ${token()}`, "Content-Type": "application/json", ...(options.headers || {})}
+    });
+    const text = await response.text();
+    if (!response.ok) throw new Error(`${response.status} ${text}`);
+    return text ? JSON.parse(text) : {status: "accepted"};
+  }
+  const show = (id, value) => document.getElementById(id).textContent = JSON.stringify(value, null, 2);
+  async function loadHealth() {
+    try { show("health", await api("/api/v1/operations/health")); } catch (e) { show("health", {error: e.message}); }
+  }
+  async function searchPayment() {
+    try { show("payments", await api(`/api/v1/operations/payments?correlationId=${encodeURIComponent(document.getElementById("correlation").value)}`)); }
+    catch (e) { show("payments", {error: e.message}); }
+  }
+  async function loadExceptions() {
+    const status = document.getElementById("exceptionStatus").value;
+    try { show("exceptions", await api(`/api/v1/operations/reconciliation/exceptions${status ? `?status=${status}` : ""}`)); }
+    catch (e) { show("exceptions", {error: e.message}); }
+  }
+  async function runReconciliation() {
+    try { show("exceptions", await api("/api/v1/operations/reconciliation/run", {method: "POST"})); }
+    catch (e) { show("exceptions", {error: e.message}); }
+  }
+  async function replay() {
+    try { show("replayResult", await api(`/api/v1/operations/dead-letters/${encodeURIComponent(document.getElementById("deadLetterId").value)}/replay`, {method: "POST"})); }
+    catch (e) { show("replayResult", {error: e.message}); }
+  }
+</script>
+</body>
+</html>

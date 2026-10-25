@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paymentops.local/schemas/payment-requested-v1.schema.json",
+  "title": "payment.requested.v1 payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "paymentId", "merchantId", "sourceAccountId", "destinationAccountId",
+    "amountCents", "currency"
+  ],
+  "properties": {
+    "paymentId": {"type": "string", "format": "uuid"},
+    "merchantId": {"type": "integer", "minimum": 1},
+    "sourceAccountId": {"type": "integer", "minimum": 1},
+    "destinationAccountId": {"type": "integer", "minimum": 1},
+    "amountCents": {"type": "integer", "minimum": 1},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}
+  }
+}

@@ -1,0 +1,17 @@
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.41 s -- in dev.ledger.account.AccountFlowTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.750 s -- in dev.ledger.auth.AuthFlowTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.991 s -- in dev.ledger.auth.AuthServiceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s -- in dev.ledger.common.MoneyTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.231 s -- in dev.ledger.event.EventIdempotencyTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.296 s -- in dev.ledger.event.KafkaConfigurationTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.333 s -- in dev.ledger.event.OutboxDispatcherTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.492 s -- in dev.ledger.payment.PaymentOpsFlowTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.825 s -- in dev.ledger.PaymentOpsApplicationTests
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.612 s -- in dev.ledger.statement.BatchJobsTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.007 s -- in dev.ledger.transfer.MoneyConservationTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s -- in dev.ledger.transfer.RateLimiterTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.185 s -- in dev.ledger.transfer.TransferFlowTest
+[INFO] Tests run: 48, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  55.952 s
+[INFO] Finished at: 2026-10-25T19:24:45-04:00

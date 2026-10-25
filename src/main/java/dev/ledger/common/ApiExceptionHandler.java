@@ -16,13 +16,17 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     ProblemDetail handleApi(ApiException ex) {
-        return ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
+        decorate(problem, ex.getCode());
+        return problem;
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     ProblemDetail handleMissingHeader(MissingRequestHeaderException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                 "Missing required header: " + ex.getHeaderName());
+        decorate(problem, "MISSING_HEADER");
+        return problem;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -33,6 +37,12 @@ public class ApiExceptionHandler {
             errors.putIfAbsent(error.getField(), error.getDefaultMessage());
         }
         problem.setProperty("errors", errors);
+        decorate(problem, "VALIDATION_FAILED");
         return problem;
+    }
+
+    private static void decorate(ProblemDetail problem, String code) {
+        problem.setProperty("code", code);
+        problem.setProperty("correlationId", CorrelationIds.current());
     }
 }

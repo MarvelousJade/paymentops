@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ledger-service
+    name: paymentops
   cloud:
     aws:
       region:
@@ -20,6 +20,17 @@ spring:
       enabled: false # jobs run on schedule or on demand, never at startup
     jdbc:
       initialize-schema: always
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      ack-mode: record
 
 ledger:
   settlement:
@@ -39,12 +50,47 @@ ledger:
     access-ttl: 15m
     refresh-ttl: 7d
 
+paymentops:
+  messaging:
+    # local executes the same event consumers directly from the database outbox.
+    # kafka publishes the envelope and uses retry/dead-letter topics.
+    mode: ${PAYMENTOPS_MESSAGING_MODE:local}
+  outbox:
+    poll-delay-ms: ${OUTBOX_POLL_DELAY_MS:250}
+    max-attempts: ${OUTBOX_MAX_ATTEMPTS:5}
+  risk:
+    per-transaction-limit-cents: ${RISK_TRANSACTION_LIMIT_CENTS:1000000}
+    daily-limit-cents: ${RISK_DAILY_LIMIT_CENTS:2500000}
+    velocity-review-count: ${RISK_VELOCITY_REVIEW_COUNT:10}
+  settlement:
+    behavior: ${SETTLEMENT_BEHAVIOR:SETTLE}
+  webhook:
+    endpoint: ${WEBHOOK_ENDPOINT:simulated://merchant}
+    signing-secret: ${WEBHOOK_SIGNING_SECRET:local-development-only}
+    max-attempts: ${WEBHOOK_MAX_ATTEMPTS:3}
+    poll-delay-ms: ${WEBHOOK_POLL_DELAY_MS:1000}
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLE_RATE:1.0}
+  otlp:
+    tracing:
+      export:
+        enabled: ${OTEL_TRACING_ENABLED:false}
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+  metrics:
+    tags:
+      service: ${spring.application.name}
 
 server:
   error:
     include-stacktrace: never
+
+logging:
+  file:
+    name: ${LOG_FILE:}

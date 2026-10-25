@@ -1,0 +1,6 @@
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.99 s -- in dev.ledger.event.EventIdempotencyTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.762 s -- in dev.ledger.event.OutboxDispatcherTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.920 s -- in dev.ledger.payment.PaymentOpsFlowTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  36.326 s

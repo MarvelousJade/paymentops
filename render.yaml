@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ledger-service
+    name: paymentops
     runtime: docker
     plan: free
     healthCheckPath: /actuator/health

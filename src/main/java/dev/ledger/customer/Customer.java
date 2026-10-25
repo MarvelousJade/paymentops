@@ -1,6 +1,8 @@
 package dev.ledger.customer;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -12,6 +14,8 @@ import java.time.Instant;
 @Table(name = "customers")
 public class Customer {
 
+    public enum Role {MERCHANT, OPERATOR, AUDITOR}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,6 +25,9 @@ public class Customer {
     private String passwordHash;
 
     private String fullName;
+
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.MERCHANT;
 
     private Instant createdAt = Instant.now();
 
@@ -47,6 +54,10 @@ public class Customer {
 
     public String getFullName() {
         return fullName;
+    }
+
+    public Role getRole() {
+        return role;
     }
 
     public Instant getCreatedAt() {

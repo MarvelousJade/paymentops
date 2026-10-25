@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /** Immutable, append-only. No setters by design. */
 @Entity
@@ -30,16 +31,27 @@ public class LedgerEntry {
 
     private Long transferId;
 
+    private UUID paymentId;
+
+    private UUID sourceEventId;
+
     private Instant createdAt = Instant.now();
 
     protected LedgerEntry() {
     }
 
     public LedgerEntry(Long accountId, Direction direction, long amountCents, Long transferId) {
+        this(accountId, direction, amountCents, transferId, null, null);
+    }
+
+    public LedgerEntry(Long accountId, Direction direction, long amountCents, Long transferId,
+                       UUID paymentId, UUID sourceEventId) {
         this.accountId = accountId;
         this.direction = direction;
         this.amountCents = amountCents;
         this.transferId = transferId;
+        this.paymentId = paymentId;
+        this.sourceEventId = sourceEventId;
     }
 
     public Long getId() {
@@ -60,6 +72,14 @@ public class LedgerEntry {
 
     public Long getTransferId() {
         return transferId;
+    }
+
+    public UUID getPaymentId() {
+        return paymentId;
+    }
+
+    public UUID getSourceEventId() {
+        return sourceEventId;
     }
 
     public Instant getCreatedAt() {

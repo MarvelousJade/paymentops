@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paymentops.local/schemas/settlement-record-v1.schema.json",
+  "title": "PaymentOps Settlement Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["externalReference", "amountCents", "currency", "status"],
+  "properties": {
+    "paymentId": {"type": ["string", "null"], "format": "uuid"},
+    "externalReference": {"type": "string", "minLength": 1},
+    "amountCents": {"type": "integer", "minimum": 1},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "status": {"enum": ["SETTLED", "REJECTED", "DELAYED"]}
+  }
+}

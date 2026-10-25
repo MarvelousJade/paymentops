@@ -1,0 +1,44 @@
+name: Promote or roll back
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Previously verified immutable image tag (commit SHA)"
+        required: true
+      rollback_tag:
+        description: "Last known good tag used automatically if verification fails"
+        required: true
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy selected version
+        id: deploy
+        continue-on-error: true
+        env:
+          DEPLOY_HOOK: ${{ secrets.PRODUCTION_DEPLOY_HOOK }}
+          IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.image_tag }}
+        run: |
+          curl --fail --silent --show-error --request POST "${DEPLOY_HOOK}?image=${IMAGE}"
+          curl --fail --retry 12 --retry-delay 10 "${{ vars.PRODUCTION_URL }}/actuator/health"
+          curl --fail "${{ vars.PRODUCTION_URL }}/actuator/prometheus" | grep -q "paymentops_outbox"
+      - name: Roll back when verification fails
+        if: steps.deploy.outcome == 'failure'
+        env:
+          ROLLBACK_HOOK: ${{ secrets.PRODUCTION_ROLLBACK_HOOK }}
+          IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.rollback_tag }}
+        run: |
+          curl --fail --silent --show-error --request POST "${ROLLBACK_HOOK}?image=${IMAGE}"
+          curl --fail --retry 12 --retry-delay 10 "${{ vars.PRODUCTION_URL }}/actuator/health"
+          exit 1

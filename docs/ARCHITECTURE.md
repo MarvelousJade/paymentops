@@ -1,0 +1,144 @@
+# PaymentOps architecture
+
+## Context
+
+```mermaid
+flowchart LR
+    Merchant --> API[Payment API]
+    Operator --> Console[Operations console]
+    Console --> API
+    API --> PG[(PostgreSQL)]
+    PG --> Outbox[Transactional outbox]
+    Outbox --> Router[Local router by default]
+    Outbox -. optional .-> Kafka[(Kafka)]
+    Kafka -. optional .-> Router
+    Router --> Risk[Risk rules]
+    Router --> Ledger[Ledger posting]
+    Router --> Settlement[Settlement simulator]
+    Router --> Reconciliation[Reconciliation]
+    Router --> Notification[Webhook delivery]
+    Risk --> PG
+    Ledger --> PG
+    Settlement --> PG
+    Reconciliation --> PG
+    Notification --> Merchant
+    API --> OTel[OpenTelemetry Collector]
+    OTel --> Tempo
+    OTel --> Prometheus
+    API --> Loki
+    Prometheus --> Grafana
+    Tempo --> Grafana
+    Loki --> Grafana
+```
+
+The repository is a modular monolith: packages own separate domain models and
+consumer idempotency names, while one deployable keeps local operation and
+portfolio review practical. Changing `PAYMENTOPS_MESSAGING_MODE` from `local`
+to `kafka` changes transport, not business handlers. Modules can be extracted
+behind the existing event contracts if independent scaling becomes necessary.
+
+## Financial consistency boundary
+
+PostgreSQL is authoritative. API payment transitions, timeline entries, API audit evidence and outgoing events share a transaction. Consumers append timelines and outgoing events with their effects; they do not all write separate audit rows. Capture and refund
+consumers lock both accounts in ascending ID order, update materialized
+balances, append one debit and one credit, and insert a posting record in one
+transaction.
+
+Three layers prevent duplicate effects:
+
+1. `(consumer_name, event_id)` is unique in `processed_events`.
+2. `(payment_id, operation_key)` and `source_event_id` are unique for payment
+   postings.
+3. Each side of a ledger event is unique by payment, event, account, and
+   direction.
+
+If processing commits and the service crashes before the Kafka offset commit,
+replay reaches layer 1 and becomes a measured no-op.
+
+## Payment state machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> REQUESTED
+    REQUESTED --> AUTHORIZED: risk approve
+    REQUESTED --> REVIEW_REQUIRED: velocity review
+    REQUESTED --> REJECTED: limit rejection
+    REQUESTED --> CANCELLED
+    AUTHORIZED --> CANCELLED
+    REVIEW_REQUIRED --> CANCELLED
+    AUTHORIZED --> CAPTURE_PENDING: capture requested
+    CAPTURE_PENDING --> CAPTURED: balanced posting
+    CAPTURE_PENDING --> FAILED: posting rejected
+    CAPTURED --> SETTLED: external settlement
+    CAPTURED --> FAILED: settlement rejected
+    CAPTURED --> PARTIALLY_REFUNDED
+    SETTLED --> PARTIALLY_REFUNDED
+    PARTIALLY_REFUNDED --> PARTIALLY_REFUNDED
+    PARTIALLY_REFUNDED --> REFUNDED
+    CAPTURED --> REFUNDED
+    SETTLED --> REFUNDED
+```
+
+Invalid transitions return `409` with a stable error code and correlation ID.
+Repeated operations return the existing result after their idempotency
+contract has completed. Authorization does not reserve funds. Create/refund keys are payload-bound, while capture/cancel use aggregate state for replay. Responses show current state. Refund state and external settlement are independent: settlement after an early refund retains the refund status and appends external evidence.
+
+## Component contracts and failure boundaries
+
+| Component | Purpose / input → output | Dependencies / likely failures |
+|---|---|---|
+| HTTP/payment service | JWT principal + validated amount/account/key → payment/refund ID/current status | Identity, repositories, transaction manager; ownership 404, validation 400, transition/payload conflict 409, rate limit 429 |
+| Risk rules | requested event → approve/review/reject + timeline/event | Payment history, configured limits, shared claim transaction; no fund reservation; review has no approval UI in this release |
+| Outbox/transport/router | committed row → handler delivery or retained retry/dead letter | SQL, JSON, local handlers or Kafka; serialization/send failure backs off; crash after send may duplicate; one dispatcher intended |
+| Consumer claim | consumer+event ID and effect → effect once or duplicate no-op | PostgreSQL ON CONFLICT, transaction proxy; failing effect rolls back claim and outgoing work |
+| Ledger posting | capture/refund event → balances, equal debit/credit, posting, next event | Payment/accounts locks, constraints; closed account/insufficient funds rejects without financial effect; ascending account-lock order limits deadlock risk |
+| Settlement/reconciliation | captured event/external records → external evidence, mismatch/resolution actions | SQL, simulator, claims; missing/duplicate/amount/late evidence classified; no real bank API or automatic financial correction |
+| Notification | terminal event → signed delivery record/history | Local simulation or configured HTTP endpoint, bounded timeout/retry; no delivery-requeue API and no proof of recipient effect |
+| Console/reporting | operator token + correlation/status → health/timeline/exception display | Operations HTTP APIs; 401/403/404 shown in output, input retained; no browser persistence of tokens |
+
+Production metrics increment in application code and are not transactional business evidence; rollbacks can over-count attempted effects. The database postings and immutable timeline are authoritative.
+
+## Data ownership
+
+| Module | Owned tables |
+|---|---|
+| Payment API | `payments`, `payment_events`, `payment_refunds` |
+| Event foundation | `outbox_events`, `processed_events` |
+| Risk | `risk_decisions` |
+| Ledger | `ledger_entries`, `payment_ledger_postings`, `accounts` |
+| Settlement | `settlement_records` |
+| Reconciliation | `reconciliation_exceptions`, `reconciliation_actions` |
+| Notification | `webhook_deliveries` |
+| Audit | `audit_events` |
+
+Timeline, audit, and reconciliation-action tables have database triggers that
+reject updates and deletes. Resolution changes exception state but appends a
+new action, preserving original evidence.
+
+## Security boundaries
+
+The built-in local identity service is an OAuth2-style JWT issuer for
+development. Access tokens contain scopes and roles; refresh tokens are stored
+only as SHA-256 hashes and rotate on use. Production can replace the issuer
+with an OIDC provider without changing controller authorization rules.
+
+- merchants: `payments:read`, `payments:write`;
+- operators: payment scopes plus `operations:read/write`, role `OPERATOR`;
+- auditors: read scopes, role `AUDITOR`.
+
+Public registration cannot choose a role. Payment tokens must match the
+synthetic `tok_...` form. Webhook signing secrets and JWT keys are injected
+through environment variables. Request bodies and authorization headers are
+not logged.
+
+## Observability
+
+HTTP/database observations use Micrometer and OpenTelemetry. Event envelopes
+carry correlation and causation IDs; the HTTP filter returns
+`X-Correlation-ID` and adds it to structured logs. Custom metrics cover outbox
+depth/failures, duplicate events, risk outcomes, ledger postings, settlement
+records, reconciliation exceptions, webhook retries, and dead letters.
+
+Grafana provisions Prometheus, Tempo, and Loki plus panels for throughput,
+p95 latency, JVM heap, Kafka lag, retries/dead letters, and
+settlement/reconciliation health.

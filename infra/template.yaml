@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: ledger-service async settlement - SQS + Lambda + DynamoDB dedup/velocity + DLQ alarm
+Description: PaymentOps async settlement - SQS + Lambda + DynamoDB dedup/velocity + DLQ alarm
 
 Parameters:
   ApiBaseUrl:

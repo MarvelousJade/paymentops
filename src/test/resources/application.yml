@@ -16,6 +16,9 @@ spring:
       enabled: false
     jdbc:
       initialize-schema: always
+  kafka:
+    listener:
+      auto-startup: false
 
 ledger:
   settlement:
@@ -30,3 +33,21 @@ ledger:
     secret: eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4
     access-ttl: 15m
     refresh-ttl: 7d
+
+paymentops:
+  messaging:
+    mode: local
+  outbox:
+    initial-delay-ms: 3600000
+    poll-delay-ms: 25
+  webhook:
+    endpoint: simulated://test
+    signing-secret: test-only-signing-secret
+    initial-delay-ms: 3600000
+    poll-delay-ms: 25
+
+management:
+  otlp:
+    tracing:
+      export:
+        enabled: false

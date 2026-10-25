@@ -5,6 +5,7 @@ import dev.ledger.account.AccountRepository;
 import dev.ledger.account.LedgerEntry;
 import dev.ledger.account.LedgerEntryRepository;
 import dev.ledger.common.Money;
+import dev.ledger.reconciliation.ReconciliationService;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +117,8 @@ public class BatchConfig {
 
     @Bean
     Step reconciliationStep(JobRepository jobRepository, PlatformTransactionManager txManager,
-                            AccountRepository accounts, LedgerEntryRepository ledgerEntries, MeterRegistry meters) {
+                            AccountRepository accounts, LedgerEntryRepository ledgerEntries,
+                            ReconciliationService paymentReconciliation, MeterRegistry meters) {
         // ponytail: single-pass tasklet over all accounts; make it a chunked step when account count outgrows one transaction.
         return new StepBuilder("reconciliationStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
@@ -129,8 +131,10 @@ public class BatchConfig {
                                     account.getId(), ledger, account.getBalanceCents());
                         }
                     }
+                    var paymentResult = paymentReconciliation.reconcileAll();
                     meters.counter("ledger.reconciliation.drift").increment(drifted);
-                    log.info("Reconciliation done: {} accounts drifted", drifted);
+                    log.info("Reconciliation done: {} accounts drifted, {} payments checked, {} open exceptions",
+                            drifted, paymentResult.paymentsChecked(), paymentResult.openExceptions());
                     return RepeatStatus.FINISHED;
                 }, txManager)
                 .build();

@@ -1,0 +1,8 @@
+{
+  "measurementSamples": 5,
+  "medianWorkflowMs": 1205.397,
+  "databaseChecksBeforeAndAfterRestart": "matched all payment IDs",
+  "localLinks": 36,
+  "credentialFieldsInEvidence": 0,
+  "result": "passed"
+}

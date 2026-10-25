@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>dev.ledger</groupId>
-	<artifactId>ledger-service</artifactId>
+	<artifactId>paymentops</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ledger-service</name>
-	<description>Payments ledger REST API</description>
+	<name>paymentops</name>
+	<description>Event-driven payment operations and reconciliation platform</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -71,8 +71,24 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-kafka</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
 		</dependency>
 
 		<dependency>
@@ -177,6 +193,22 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.6.1</version>
+				<executions>
+					<execution>
+						<id>enforce-java</id>
+						<goals><goal>enforce</goal></goals>
+						<configuration>
+							<rules>
+								<requireJavaVersion><version>[21,22)</version></requireJavaVersion>
+							</rules>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
