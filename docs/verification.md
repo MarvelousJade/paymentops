@@ -28,6 +28,10 @@ Equivalent PostgreSQL integration layer without Docker, against an **empty dispo
 | `e772520` + expanded payment tests | same verify after auth fixture repair | all 48 tests passed; build failed at jar rename (running JVM held target jar) | 1:21 |
 | `e772520` + scheduler repair + expanded payment tests (committed as `7e14b85`/`c8a3b85`) | native PostgreSQL verify, demo JVM stopped | 48 passed, 0 failed/errors/skipped; BUILD SUCCESS, jar and JaCoCo generated | 55.952 s |
 | production workflow at `ccff3e4` + local profile changes | settlement-lambda verify | 9 passed, 0 failed/errors/skipped | 32.290 s |
+| merged local main `d52b67c` | native PostgreSQL verify against a newly created `paymentops_release_test` database (same command, new database name) | 48 passed, 0 failed/errors/skipped; BUILD SUCCESS | 50.198 s |
+| merged local main `d52b67c` | settlement-lambda verify | 9 passed, 0 failed/errors/skipped; BUILD SUCCESS | 5.783 s |
+
+Post-integration summaries: `evidence/merged-postgres.txt` and `evidence/merged-lambda.txt`. `d52b67c` is the no-fast-forward integration of `shaoyu/rework` into local main. Later verification-record edits do not alter application code. Measured source `c8a3b85` has identical production source/pom to the integrated result.
 
 Targeted failure/repair runs are preserved individually in `docs/evidence/bug-*` and `ctrl-*`; see journal for exact provenance. Do not sum runs into a unique-test count. The final PostgreSQL suite contains 48 tests across 13 classes; the legacy Docker-dependent AsyncSettlementFlowTest is excluded, not reported as skipped. The separate Lambda run contains 9 tests.
 
