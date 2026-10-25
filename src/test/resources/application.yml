@@ -38,10 +38,12 @@ paymentops:
   messaging:
     mode: local
   outbox:
+    initial-delay-ms: 3600000
     poll-delay-ms: 25
   webhook:
     endpoint: simulated://test
     signing-secret: test-only-signing-secret
+    initial-delay-ms: 3600000
     poll-delay-ms: 25
 
 management:

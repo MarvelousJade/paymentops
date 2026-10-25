@@ -74,4 +74,18 @@ Provenance: intentionally introduced on isolated `shaoyu/learning` after CTRL-00
 - Investigation: inspected the first SQL error and test line 128. The fixed raw string `expired-raw` produced the same globally unique hash on each run; unique customer emails did not isolate the token fixture. Application auth behavior was not the failing boundary. No credential/expiry theory was needed after the constraint evidence.
 - Fix: generate a unique expired raw token per invocation, while keeping its persisted expiry in the past. No production code changes. Tradeoff: randomized identity removes cross-run collision; expiry behavior remains deterministic. A clean database per run remains recommended.
 - Verification: AuthFlowTest passed 6/6 twice on the same retained database, 31.410 s and 28.390 s respectively. Historical failing summary and separate passing summaries: `docs/evidence/bug-004-*`. Do not combine these into an inflated unique-test count.
-- Lesson/interview explanation: repeatable integration fixtures require uniqueness at every constrained key, not just user identity. Repeated verification exposed a test-isolation mistake rather than a production auth incident. Fix commit: the commit containing this entry.
+- Lesson/interview explanation: repeatable integration fixtures require uniqueness at every constrained key, not just user identity. Repeated verification exposed a test-isolation mistake rather than a production auth incident. Fix commit: `e772520`.
+
+## BUG-005 — fixed delay did not suppress the initial scheduled dispatch
+
+- Origin: existing pending scheduler configuration in `011bfe6`, naturally observed in native PostgreSQL suite logs: a configuration-only Kafka test attempted sends without a broker. Long poll-delay values were intended to leave dispatch under test control.
+- Reproduction: add a dispatcher spy to KafkaConfigurationTest and assert never-dispatched. Before fix this failed 1/1 with NeverWantedButInvoked, 57.342 s; producer connection attempts were observed. This is a test-isolation defect, not evidence of a Kafka outage.
+- Investigation/root cause: `@Scheduled(fixedDelay=...)` delays repetitions after the first invocation, not the first invocation itself. Shared retained test rows made the unsolicited startup poll visible. Listener/admin auto-startup flags do not control the application's own dispatcher.
+- Fix: independently configurable initial delays for outbox and webhook schedules (production default unchanged at zero); tests use one hour and call dispatch explicitly. Regression spy verifies no scheduled dispatch in the configuration-only test.
+- Tradeoffs: manual drains test consumers deterministically but do not establish real scheduler timing; the packaged HTTP demo separately runs the actual scheduler. No speedup is claimed from these changed test conditions.
+- Verification: full native PostgreSQL Maven verify passed 48/48, 0 failures/errors/skips in 55.952 s; includes the pending expanded insufficient-funds/cancellation/concurrent-create cases. Evidence in `docs/evidence/bug-005-failing.txt` and `final-postgres.txt`.
+- Lesson/interview explanation: distinguish scheduling period from startup policy; control asynchronous work explicitly in tests instead of relying on large delays.
+
+## 2026-10-25 — Windows build-artifact locking hurdle
+
+A preceding verify run passed all 48 tests but failed at Spring Boot repackage because the running demo JVM held the target jar open and Maven could not rename it. This was an environment/lifecycle mistake during verification, not an application test failure. Stopped only the demo process started for this task, then reran verify successfully. For further demos, copy the built jar outside target before launching so builds cannot overwrite the running artifact. Preserve the unfavorable build result in `docs/evidence/build-locked-jar.txt`. No application repair was needed.

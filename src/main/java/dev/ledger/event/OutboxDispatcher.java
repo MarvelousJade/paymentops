@@ -31,7 +31,8 @@ public class OutboxDispatcher {
                 repository -> repository.countByStatus(OutboxEvent.Status.PENDING));
     }
 
-    @Scheduled(fixedDelayString = "${paymentops.outbox.poll-delay-ms:250}")
+    @Scheduled(fixedDelayString = "${paymentops.outbox.poll-delay-ms:250}",
+            initialDelayString = "${paymentops.outbox.initial-delay-ms:0}")
     public void dispatch() {
         List<OutboxEvent> due = events.findDue(
                 OutboxEvent.Status.PENDING, Instant.now(), PageRequest.of(0, 50));

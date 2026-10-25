@@ -1,0 +1,4 @@
+[INFO] Tests run: 48, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+[INFO] Total time:  01:21 min
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:4.0.7:repackage (repackage) on project paymentops: Execution repackage of goal org.springframework.boot:spring-boot-maven-plugin:4.0.7:repackage failed: Unable to rename 'E:\C++ PROJECTS\paymentops\target\paymentops-0.0.1-SNAPSHOT.jar' to 'E:\C++ PROJECTS\paymentops\target\paymentops-0.0.1-SNAPSHOT.jar.original' -> [Help 1]

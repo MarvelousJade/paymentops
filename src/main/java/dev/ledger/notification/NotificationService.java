@@ -71,7 +71,8 @@ public class NotificationService {
         });
     }
 
-    @Scheduled(fixedDelayString = "${paymentops.webhook.poll-delay-ms:1000}")
+    @Scheduled(fixedDelayString = "${paymentops.webhook.poll-delay-ms:1000}",
+            initialDelayString = "${paymentops.webhook.initial-delay-ms:0}")
     @Transactional
     public void deliverDue() {
         List<WebhookDelivery> due = deliveries.findByStatusInAndNextAttemptAtBeforeOrderByCreatedAt(

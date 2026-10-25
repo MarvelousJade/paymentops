@@ -5,6 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,9 +28,13 @@ class KafkaConfigurationTest {
     @Autowired
     KafkaEventConsumer consumer;
 
+    @MockitoSpyBean
+    OutboxDispatcher dispatcher;
+
     @Test
     void kafkaTransportRetryAndDeadLetterConfigurationLoads() {
         assertThat(transport).isInstanceOf(KafkaEventTransport.class);
         assertThat(consumer).isNotNull();
+        verify(dispatcher, never()).dispatch();
     }
 }
