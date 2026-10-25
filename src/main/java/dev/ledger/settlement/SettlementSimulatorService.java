@@ -62,7 +62,7 @@ public class SettlementSimulatorService {
     @Transactional
     public void completeDelayed(UUID paymentId) {
         Payment payment = payments.findWithLockById(paymentId).orElseThrow();
-        if (payment.getStatus() != Payment.Status.CAPTURED) {
+        if (!awaitingSettlement(payment)) {
             return;
         }
         String reference = "rail-" + paymentId;
@@ -77,7 +77,7 @@ public class SettlementSimulatorService {
     private void settle(EventEnvelope event, Behavior selected) {
         UUID paymentId = UUID.fromString(event.aggregateId());
         Payment payment = payments.findWithLockById(paymentId).orElseThrow();
-        if (payment.getStatus() != Payment.Status.CAPTURED) {
+        if (!awaitingSettlement(payment)) {
             return;
         }
         String reference = "rail-" + paymentId;
@@ -101,7 +101,10 @@ public class SettlementSimulatorService {
         if (status == SettlementRecord.Status.SETTLED) {
             finishSettlement(payment, event.eventId(), record);
         } else if (status == SettlementRecord.Status.REJECTED) {
-            Payment.Status old = payment.transition(Payment.Status.CAPTURED, Payment.Status.FAILED);
+            Payment.Status old = payment.getStatus();
+            if (old == Payment.Status.CAPTURED) {
+                payment.transition(Payment.Status.CAPTURED, Payment.Status.FAILED);
+            }
             UUID failedEvent = outbox.enqueue(SETTLEMENT_FAILED, paymentId, payment.getCorrelationId(),
                     event.eventId(), "settlement-simulator", new PaymentReference(paymentId));
             paymentService.append(payment, failedEvent, SETTLEMENT_FAILED, old, payment.getStatus(),
@@ -116,12 +119,26 @@ public class SettlementSimulatorService {
     }
 
     private void finishSettlement(Payment payment, UUID causationId, SettlementRecord record) {
-        Payment.Status old = payment.transition(Payment.Status.CAPTURED, Payment.Status.SETTLED);
+        Payment.Status old = payment.getStatus();
+        // Refund progress and external settlement are independent facts. An early
+        // refund must not suppress settlement evidence or have its state overwritten.
+        if (old == Payment.Status.CAPTURED) {
+            payment.transition(Payment.Status.CAPTURED, Payment.Status.SETTLED);
+        }
         UUID settledEvent = outbox.enqueue(SETTLED, payment.getId(), payment.getCorrelationId(),
                 causationId, "settlement-simulator", new PaymentReference(payment.getId()));
         paymentService.append(payment, settledEvent, SETTLED, old, payment.getStatus(),
                 "settlement-simulator", Map.of("settlementRecordId", record.getId(),
                         "externalReference", record.getExternalReference()));
+    }
+
+    private boolean awaitingSettlement(Payment payment) {
+        Payment.Status status = payment.getStatus();
+        return (status == Payment.Status.CAPTURED || status == Payment.Status.PARTIALLY_REFUNDED
+                || status == Payment.Status.REFUNDED)
+                && records.findByPaymentIdOrderByReceivedAt(payment.getId()).stream()
+                .noneMatch(r -> r.getStatus() == SettlementRecord.Status.SETTLED
+                        || r.getStatus() == SettlementRecord.Status.REJECTED);
     }
 
     private static String raw(UUID paymentId, String reference, long amount, String currency,

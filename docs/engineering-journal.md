@@ -22,4 +22,16 @@
 - Verification: targeted run before fix: 2 tests, 1 error. After fix: EventIdempotencyTest + PaymentOpsFlowTest, 6 passed, 0 failures/errors/skips, 32.218 s. Rollback test proves both outgoing effect and claim disappear on failure, then retry succeeds once. Summaries: `docs/evidence/bug-001-*`.
 - Prevention/design implication: model durable deduplication as an atomic database claim, not a caught constraint violation inside a live transaction.
 - Interview explanation: concurrent replay exposed a transaction-boundary bug missed by sequential tests; a measured PostgreSQL lock wait made the reproduction controlled; conflict-safe insertion preserved atomic claim/effect rollback without sacrificing harmless duplicate responses. This is local integration evidence, not a production incident.
-- Fix commit: the commit containing this entry (`git log --all --grep='claim duplicate events without aborting'`).
+- Fix commit: `ab86d88`.
+
+## BUG-002 — early refund hides external settlement
+
+- Origin/affected source: existing implementation in `011bfe6`, reproduced from `ab86d88`; found by tracing status guards and deliberately reordering valid messages, not by injecting faulty code.
+- Problem/impact: refunds are accepted after CAPTURED, but the settlement consumer returned unless status was exactly CAPTURED. An early partial refund produced no external settled record. A later capture retry also returned 409, and reconcileAll omitted refunded payments.
+- Reproduction: `PaymentOpsFlowTest.refundBeforeSettlementDoesNotDiscardSettlementAndCaptureRetryRemainsSafe`. Capture once, hold capture-posted delivery, request/refund 10 of 30 CAD, then deliver capture-posted. Separate Kafka topics do not establish a global ordering; the test routes through real transactional handlers without a broker.
+- Investigation: suspected status coupling rather than ledger duplication. Database assertions confirmed PARTIALLY_REFUNDED and two postings; regression failed with expected settlement size 1, actual 0. The consumer's CAPTURED-only guard explained the absence. No Kafka crash or production incident was observed.
+- Fix: allow settlement for captured/partially/fully refunded payments without overwriting refund state; use retained settled/rejected records to prevent repeated terminal evidence; reconciliation selects payments with an actual capture posting; capture replay accepts post-refund states.
+- Tradeoffs: settlement and refund are orthogonal facts represented by payment status plus settlement records rather than a new state-machine dimension/schema migration. This is smaller but callers must inspect settlement records/timeline, not infer all settlement facts from payment status. Refunding after simulated settlement rejection remains outside the supported workflow.
+- Verification: new integration test failed once (1 failure, 0 errors) before repair, then combined event/payment suite passed 7/7 in 40.180 s. Checks include retained partial-refund state, one settlement, detection of a later amount mismatch on reconcileAll, and harmless capture replay. See `docs/evidence/bug-002-*`.
+- Lesson/interview explanation: independent asynchronous processes must not discard valid evidence merely because another process advanced an aggregate's status. Reorder valid events in integration tests; sequential happy paths cannot establish ordering safety.
+- Fix commit: the commit containing this entry (`git log --grep='retain settlement evidence after early refunds'`).

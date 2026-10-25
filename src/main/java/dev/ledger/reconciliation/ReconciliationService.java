@@ -66,9 +66,7 @@ public class ReconciliationService {
     public RunResponse reconcileAll() {
         int checked = 0;
         for (Payment payment : payments.findAll()) {
-            if (payment.getStatus() == Payment.Status.CAPTURED
-                    || payment.getStatus() == Payment.Status.SETTLED
-                    || payment.getStatus() == Payment.Status.FAILED) {
+            if (postings.findByPaymentIdAndOperationKey(payment.getId(), "CAPTURE").isPresent()) {
                 reconcilePayment(payment.getId());
                 checked++;
             }

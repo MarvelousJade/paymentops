@@ -52,6 +52,9 @@ class PaymentOpsFlowTest {
     @Autowired
     SettlementSimulatorService settlement;
 
+    @Autowired
+    dev.ledger.settlement.SettlementRecordRepository settlementRecords;
+
     RestTestClient client;
 
     @BeforeEach
@@ -132,6 +135,51 @@ class PaymentOpsFlowTest {
                 .exchange().expectBody()
                 .jsonPath("$[0].eventType").isEqualTo("payment.requested.v1");
         assertThat(correlationId).isNotBlank();
+    }
+
+    @Test
+    void refundBeforeSettlementDoesNotDiscardSettlementAndCaptureRetryRemainsSafe() {
+        String merchant = register();
+        long source = account(merchant, "100.00");
+        long destination = account(register(), null);
+        UUID paymentId = UUID.fromString((String) createPayment(merchant, UUID.randomUUID().toString(),
+                source, destination, "30.00").expectBody(Map.class)
+                .returnResult().getResponseBody().get("id"));
+        drain(2);
+        client.post().uri("/api/v1/payments/" + paymentId + "/capture")
+                .header("Authorization", bearer(merchant))
+                .header("Idempotency-Key", "capture-retry")
+                .exchange().expectStatus().isAccepted();
+        dispatcher.dispatch(); // CAPTURED, before the settlement consumer runs
+        client.post().uri("/api/v1/payments/" + paymentId + "/refunds")
+                .header("Authorization", bearer(merchant))
+                .header("Idempotency-Key", "early-refund")
+                .body(Map.of("amount", "10.00"))
+                .exchange().expectStatus().isAccepted();
+        // Independent Kafka topics may deliver refund before capture-posted.
+        OutboxEvent refund = outbox.findAll().stream()
+                .filter(e -> e.getAggregateId().equals(paymentId.toString()))
+                .filter(e -> e.getEventType().equals(PaymentService.REFUND_REQUESTED))
+                .findFirst().orElseThrow();
+        router.route(EventEnvelope.from(refund, new com.fasterxml.jackson.databind.ObjectMapper()
+                .findAndRegisterModules()));
+        assertThat(payments.findById(paymentId).orElseThrow().getStatus())
+                .isEqualTo(Payment.Status.PARTIALLY_REFUNDED);
+        drain(5);
+        assertThat(settlementRecords.findByPaymentIdOrderByReceivedAt(paymentId))
+                .hasSize(1).allMatch(r -> r.getStatus() == SettlementRecord.Status.SETTLED);
+        assertThat(payments.findById(paymentId).orElseThrow().getStatus())
+                .isEqualTo(Payment.Status.PARTIALLY_REFUNDED);
+        settlement.importRecord(paymentId, "wrong-amount-" + paymentId, 2_900, "CAD",
+                SettlementRecord.Status.SETTLED);
+        reconciliation.reconcileAll();
+        assertThat(exceptions.findByPaymentIdAndClassification(paymentId,
+                ReconciliationException.Classification.AMOUNT_MISMATCH)).isPresent();
+        client.post().uri("/api/v1/payments/" + paymentId + "/capture")
+                .header("Authorization", bearer(merchant))
+                .header("Idempotency-Key", "capture-retry")
+                .exchange().expectStatus().isAccepted();
+        assertThat(postings.countByPaymentId(paymentId)).isEqualTo(2);
     }
 
     @Test

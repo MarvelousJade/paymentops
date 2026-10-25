@@ -118,7 +118,9 @@ public class PaymentService {
         Payment payment = lockedOwned(merchantId, paymentId);
         if (payment.getStatus() == Payment.Status.CAPTURE_PENDING
                 || payment.getStatus() == Payment.Status.CAPTURED
-                || payment.getStatus() == Payment.Status.SETTLED) {
+                || payment.getStatus() == Payment.Status.SETTLED
+                || payment.getStatus() == Payment.Status.PARTIALLY_REFUNDED
+                || payment.getStatus() == Payment.Status.REFUNDED) {
             return PaymentResponse.from(payment);
         }
         Payment.Status old;
