@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import {existsSync, readFileSync, readdirSync} from 'node:fs';
 import {dirname, resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
+for (const path of ['mvnw', 'entrypoint.sh']) {
+  assert(execFileSync('git', ['ls-files', '--stage', '--', path], {encoding: 'utf8'}).startsWith('100755 '),
+    `${path} must retain its executable bit for Linux checkouts`);
+}
 const json = path => JSON.parse(readFileSync(path, 'utf8'));
 const metadata = json('docs/evidence/measurement.json');
 execFileSync('git', ['cat-file', '-e', `${metadata.sourceCommit}^{commit}`]);

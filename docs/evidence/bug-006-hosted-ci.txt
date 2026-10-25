@@ -1,0 +1,9 @@
+Source: 941e5cc
+Hosted run: https://github.com/MarvelousJade/paymentops/actions/runs/40245852400
+Runner: Ubuntu 24.04.5, Java Temurin 21.0.12+1
+2026-10-25T23:41:01.1298709Z Run ./mvnw --batch-mode verify
+2026-10-25T23:41:01.1458686Z shell: line 1: ./mvnw: Permission denied
+2026-10-25T23:41:01.1472719Z Process completed with exit code 126.
+No Maven tests executed in this run; Lambda/container steps were skipped.
+Git tree inspection: both mvnw and entrypoint.sh were 100644 in baseline 9316c46.
+Repair: retain executable file mode 100755 in Git for both scripts, with CI executable/shell-syntax checks.

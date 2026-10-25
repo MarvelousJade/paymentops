@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Validate executable shell entry points
+        run: |
+          test -x ./mvnw
+          test -x ./entrypoint.sh
+          bash -n ./mvnw ./entrypoint.sh
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
