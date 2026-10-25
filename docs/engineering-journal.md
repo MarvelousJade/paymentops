@@ -43,4 +43,27 @@
 - Corrected documentation overclaims: the inherited Kafka crash timeline was hypothetical, Schema Registry registration is not producer validation, webhook requeue does not exist, hosted/security workflows have not been executed here. Release publication now requires manual dispatch rather than an automatic push trigger. No deployment was attempted.
 - Verification: packaged jar launched on native PostgreSQL with local transport; after waiting for health UP (20.385 s startup in the log), the first HTTP demo passed, including partial/full refunds, replay conflicts, cross-merchant denial, final balances and reconciliation. An initial health/registration probe preceded startup and got connection refused; waited for readiness rather than changing behavior. This is setup timing, not an application bug.
 - Demo decisions: Node's built-in HTTP/assertion libraries, no npm dependency; loopback restriction and externally provisioned operator prevent accidental fixture use remotely or public role elevation. New users per run avoid rate-limit/risk interference. First smoke timings are not optimization evidence.
+
+## CTRL-001 — request identity checkpoint
+
+Provenance: intentionally introduced on isolated `shaoyu/learning` from verified `02ac6a1`; faulty checkpoint `166bf59`. This does not describe a production incident or a defect on `main`. Learner-facing symptoms are in `debugging/README.md`; diagnoses remain separate.
+
+- Problem/reproduction: same key with 30.00 then 31.00 returned 202 instead of 409. `PaymentOpsFlowTest.sameCreateKeyRejectsChangedAmountWithoutCreatingFinancialEffects` runs real HTTP calls; the fault produced 1 failure/1 test in 33.490 s.
+- Hypothesis/evidence: request parsing versus payload identity. Both responses were accepted with the same ID; source review confirmed that amount alone was omitted from the equality guard. The test isolates pre-capture behavior, so event ordering cannot explain the mismatch. No other attempted diagnosis is claimed.
+- Root cause/fix: identity comparison omitted a financially significant field. Restore the amount comparison alongside source/destination/currency/token. This restores already-correct behavior from the implementation baseline, not a new fix to main.
+- Tradeoff: explicit field comparison is easy to inspect but requires updating when adding request fields. A canonical request hash is an alternative but introduces serialization/versioning questions unnecessary for this schema.
+- Verification: repaired PaymentOpsFlowTest passed 6/6, 0 errors/skips in 29.080 s. Test checks conflict code, retained original amount, zero financial postings and unchanged source balance. `docs/evidence/ctrl-001-*` preserves failing/passing summaries.
+- Lesson/interview explanation: idempotency is identity plus replay, not simply looking up a key. Strengthen HTTP tests so field omissions are detected. Personal investigation notes remain unprovided.
+
+## CTRL-002 — publication bookkeeping checkpoint
+
+Provenance: intentionally introduced on isolated `shaoyu/learning` after CTRL-001 repair; faulty checkpoint `3674349`. Baseline working behavior already publishes only after successful send. No production incident is implied.
+
+- Problem/reproduction: with a throwing transport, a single dispatch left the event PUBLISHED instead of PENDING, so a real due-query would no longer select it. `OutboxDispatcherTest` uses disposable in-memory objects/mocked repository and transport, not a stopped real service.
+- Investigation/hypotheses: retry filtering versus state mutation order. Tests inspect state during send and after failure; first run had 3 failures/3 tests, showing premature PUBLISHED and a non-null publication timestamp. The failure counter was insufficient evidence of recoverability. No actual broker outage was observed.
+- Root cause: published() ran before transport.send(); the failure handler increments attempts/backoff but assumes the prior status is still pending. Moving publication after acknowledgement restores that invariant.
+- Fix/tradeoffs: restore baseline send-then-publish ordering. This still permits duplicate send if the process crashes after transport acknowledgement and before saving publication; durable consumer idempotency handles that accepted at-least-once window. Marking before send trades duplicates for potential lost delivery and is not acceptable.
+- Verification: new unit tests cover failure→retry→success, bounded dead letter/replay reset, and state at transport acknowledgement. Failing 3/3 in 14.875 s; repaired combined outbox/idempotency/payment tests passed 11/11, 0 failures/errors/skips in 36.326 s. Mock due-events are supplied again to avoid sleeps; database due-query behavior is not established by these unit tests. See `docs/evidence/ctrl-002-*`.
+- Lesson/interview explanation: event state must describe completed external work, not intended work; test both retry eligibility and success ordering. Final integration contributes regression coverage while restoring already-correct implementation code.
+
 - Verification beyond the app: settlement Lambda 9/9 unit/handler tests passed in 32.290 s; no AWS execution claimed. Docker/Compose clients were downloaded outside Git for config validation only, not an engine install.

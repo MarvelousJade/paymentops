@@ -183,6 +183,24 @@ class PaymentOpsFlowTest {
     }
 
     @Test
+    void sameCreateKeyRejectsChangedAmountWithoutCreatingFinancialEffects() {
+        String merchant = register();
+        long source = account(merchant, "100.00");
+        long destination = account(register(), null);
+        String key = UUID.randomUUID().toString();
+        Map first = createPayment(merchant, key, source, destination, "30.00")
+                .expectStatus().isAccepted().expectBody(Map.class).returnResult().getResponseBody();
+        UUID id = UUID.fromString((String) first.get("id"));
+        createPayment(merchant, key, source, destination, "31.00")
+                .expectStatus().isEqualTo(409)
+                .expectBody().jsonPath("$.code").isEqualTo("IDEMPOTENCY_KEY_REUSED");
+        assertThat(payments.findById(id).orElseThrow().getAmountCents()).isEqualTo(3_000);
+        assertThat(postings.countByPaymentId(id)).isZero();
+        client.get().uri("/accounts/" + source).header("Authorization", bearer(merchant))
+                .exchange().expectBody().jsonPath("$.balance").isEqualTo("100.00");
+    }
+
+    @Test
     void deterministicRiskRejectsLimitAndInvalidTransitionIsSafe() {
         String merchant = register();
         long source = account(merchant, "1.00");
