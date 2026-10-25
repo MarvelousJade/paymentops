@@ -46,6 +46,13 @@
 
 ## CTRL-001 — request identity checkpoint
 
-Provenance: intentionally introduced on isolated `shaoyu/learning` from verified `02ac6a1`. The retry identity comparison now omits the amount field. This faulty checkpoint is retained for controlled reproduction; it does not describe behavior previously observed in production or on `main`. Learner-facing symptoms are in `debugging/README.md`; investigation/test evidence and repair follow separately.
+Provenance: intentionally introduced on isolated `shaoyu/learning` from verified `02ac6a1`; faulty checkpoint `166bf59`. This does not describe a production incident or a defect on `main`. Learner-facing symptoms are in `debugging/README.md`; diagnoses remain separate.
+
+- Problem/reproduction: same key with 30.00 then 31.00 returned 202 instead of 409. `PaymentOpsFlowTest.sameCreateKeyRejectsChangedAmountWithoutCreatingFinancialEffects` runs real HTTP calls; the fault produced 1 failure/1 test in 33.490 s.
+- Hypothesis/evidence: request parsing versus payload identity. Both responses were accepted with the same ID; source review confirmed that amount alone was omitted from the equality guard. The test isolates pre-capture behavior, so event ordering cannot explain the mismatch. No other attempted diagnosis is claimed.
+- Root cause/fix: identity comparison omitted a financially significant field. Restore the amount comparison alongside source/destination/currency/token. This restores already-correct behavior from the implementation baseline, not a new fix to main.
+- Tradeoff: explicit field comparison is easy to inspect but requires updating when adding request fields. A canonical request hash is an alternative but introduces serialization/versioning questions unnecessary for this schema.
+- Verification: repaired PaymentOpsFlowTest passed 6/6, 0 errors/skips in 29.080 s. Test checks conflict code, retained original amount, zero financial postings and unchanged source balance. `docs/evidence/ctrl-001-*` preserves failing/passing summaries.
+- Lesson/interview explanation: idempotency is identity plus replay, not simply looking up a key. Strengthen HTTP tests so field omissions are detected. Personal investigation notes remain unprovided.
 
 - Verification beyond the app: settlement Lambda 9/9 unit/handler tests passed in 32.290 s; no AWS execution claimed. Docker/Compose clients were downloaded outside Git for config validation only, not an engine install.

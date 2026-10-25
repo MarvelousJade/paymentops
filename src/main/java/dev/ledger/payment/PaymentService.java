@@ -221,6 +221,7 @@ public class PaymentService {
                                            long amount, String currency, String paymentToken) {
         if (!existing.getSourceAccountId().equals(source)
                 || !existing.getDestinationAccountId().equals(destination)
+                || existing.getAmountCents() != amount
                 || !existing.getCurrency().equals(currency)
                 || !existing.getPaymentToken().equals(paymentToken)) {
             throw conflict("IDEMPOTENCY_KEY_REUSED",
