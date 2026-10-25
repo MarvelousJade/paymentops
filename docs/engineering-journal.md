@@ -57,6 +57,13 @@ Provenance: intentionally introduced on isolated `shaoyu/learning` from verified
 
 ## CTRL-002 — publication bookkeeping checkpoint
 
-Provenance: intentionally introduced on isolated `shaoyu/learning` after CTRL-001 repair. Marking publication before the transport acknowledges success models a plausible ordering mistake; failing evidence and repair will follow. Baseline working behavior already publishes only after successful send. No production incident is implied.
+Provenance: intentionally introduced on isolated `shaoyu/learning` after CTRL-001 repair; faulty checkpoint `3674349`. Baseline working behavior already publishes only after successful send. No production incident is implied.
+
+- Problem/reproduction: with a throwing transport, a single dispatch left the event PUBLISHED instead of PENDING, so a real due-query would no longer select it. `OutboxDispatcherTest` uses disposable in-memory objects/mocked repository and transport, not a stopped real service.
+- Investigation/hypotheses: retry filtering versus state mutation order. Tests inspect state during send and after failure; first run had 3 failures/3 tests, showing premature PUBLISHED and a non-null publication timestamp. The failure counter was insufficient evidence of recoverability. No actual broker outage was observed.
+- Root cause: published() ran before transport.send(); the failure handler increments attempts/backoff but assumes the prior status is still pending. Moving publication after acknowledgement restores that invariant.
+- Fix/tradeoffs: restore baseline send-then-publish ordering. This still permits duplicate send if the process crashes after transport acknowledgement and before saving publication; durable consumer idempotency handles that accepted at-least-once window. Marking before send trades duplicates for potential lost delivery and is not acceptable.
+- Verification: new unit tests cover failure→retry→success, bounded dead letter/replay reset, and state at transport acknowledgement. Failing 3/3 in 14.875 s; repaired combined outbox/idempotency/payment tests passed 11/11, 0 failures/errors/skips in 36.326 s. Mock due-events are supplied again to avoid sleeps; database due-query behavior is not established by these unit tests. See `docs/evidence/ctrl-002-*`.
+- Lesson/interview explanation: event state must describe completed external work, not intended work; test both retry eligibility and success ordering. Final integration contributes regression coverage while restoring already-correct implementation code.
 
 - Verification beyond the app: settlement Lambda 9/9 unit/handler tests passed in 32.290 s; no AWS execution claimed. Docker/Compose clients were downloaded outside Git for config validation only, not an engine install.

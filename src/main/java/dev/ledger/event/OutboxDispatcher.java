@@ -37,8 +37,8 @@ public class OutboxDispatcher {
                 OutboxEvent.Status.PENDING, Instant.now(), PageRequest.of(0, 50));
         for (OutboxEvent event : due) {
             try {
-                event.published();
                 transport.send(EventEnvelope.from(event, mapper));
+                event.published();
                 meters.counter("paymentops.outbox.published", "event_type", event.getEventType()).increment();
             } catch (Exception failure) {
                 event.failed(failure, maxAttempts);

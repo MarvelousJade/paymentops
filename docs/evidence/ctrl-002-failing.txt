@@ -1,0 +1,16 @@
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 3.773 s <<< FAILURE! -- in dev.ledger.event.OutboxDispatcherTest
+expected: PENDING
+ but was: PUBLISHED
+expected: PENDING
+ but was: PUBLISHED
+expected: null
+ but was: 2026-10-25T23:14:28.438547200Z
+expected: PENDING
+ but was: PUBLISHED
+expected: null
+ but was: 2026-10-25T23:14:28.438547200Z
+expected: PENDING
+ but was: PUBLISHED
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+[INFO] Total time:  14.875 s
