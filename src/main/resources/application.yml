@@ -80,6 +80,8 @@ management:
       probability: ${TRACING_SAMPLE_RATE:1.0}
   otlp:
     tracing:
+      export:
+        enabled: ${OTEL_TRACING_ENABLED:false}
       endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
   metrics:
     tags:

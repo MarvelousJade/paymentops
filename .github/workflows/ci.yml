@@ -5,15 +5,31 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - run: ./mvnw --batch-mode verify
-      - run: ./mvnw --batch-mode -f settlement-lambda/pom.xml verify
+      - name: Validate JSON event schemas
+        run: |
+          for schema in src/main/resources/schemas/*.json; do
+            python -m json.tool "$schema" >/dev/null
+          done
+      - name: Validate local platform definition
+        run: JWT_SECRET=Y2ktb25seS1rZXktY2ktb25seS1rZXktY2ktb25seS1rZXk= docker compose config --quiet
+        env:
+          WEBHOOK_SIGNING_SECRET: ci-only
+      - name: Unit and integration tests
+        run: ./mvnw --batch-mode verify
+      - name: Settlement Lambda tests
+        run: ./mvnw --batch-mode -f settlement-lambda/pom.xml verify
+      - name: Build application container without publishing
+        run: docker build --tag paymentops:${{ github.sha }} .

@@ -1,5 +1,12 @@
 # Decisions
 
+> PaymentOps extension note (2026-07): the original decisions below describe
+> the ledger-only baseline. PaymentOps intentionally supersedes the earlier
+> Kafka/microservices out-of-scope boundary with a modular-monolith event
+> architecture, transactional outbox, optional Kafka transport, settlement,
+> reconciliation, notification, and operations modules. See
+> `docs/ARCHITECTURE.md` for the current system.
+
 One paragraph per non-obvious choice, newest last.
 
 ## 1. Modular monolith, not microservices

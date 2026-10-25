@@ -9,12 +9,14 @@ flowchart LR
     Console --> API
     API --> PG[(PostgreSQL)]
     PG --> Outbox[Transactional outbox]
-    Outbox --> Kafka[(Kafka)]
-    Kafka --> Risk[Risk rules]
-    Kafka --> Ledger[Ledger posting]
-    Kafka --> Settlement[Settlement simulator]
-    Kafka --> Reconciliation[Reconciliation]
-    Kafka --> Notification[Webhook delivery]
+    Outbox --> Router[Local router by default]
+    Outbox -. optional .-> Kafka[(Kafka)]
+    Kafka -. optional .-> Router
+    Router --> Risk[Risk rules]
+    Router --> Ledger[Ledger posting]
+    Router --> Settlement[Settlement simulator]
+    Router --> Reconciliation[Reconciliation]
+    Router --> Notification[Webhook delivery]
     Risk --> PG
     Ledger --> PG
     Settlement --> PG
@@ -37,8 +39,7 @@ behind the existing event contracts if independent scaling becomes necessary.
 
 ## Financial consistency boundary
 
-PostgreSQL is authoritative. A payment transition, immutable timeline entry,
-audit evidence, and outgoing event are committed together. Capture and refund
+PostgreSQL is authoritative. API payment transitions, timeline entries, API audit evidence and outgoing events share a transaction. Consumers append timelines and outgoing events with their effects; they do not all write separate audit rows. Capture and refund
 consumers lock both accounts in ascending ID order, update materialized
 balances, append one debit and one credit, and insert a posting record in one
 transaction.
@@ -80,7 +81,7 @@ stateDiagram-v2
 
 Invalid transitions return `409` with a stable error code and correlation ID.
 Repeated operations return the existing result after their idempotency
-contract has completed.
+contract has completed. Authorization does not reserve funds. Create/refund keys are payload-bound, while capture/cancel use aggregate state for replay. Responses show current state. Refund state and external settlement are independent: settlement after an early refund retains the refund status and appends external evidence.
 
 ## Data ownership
 

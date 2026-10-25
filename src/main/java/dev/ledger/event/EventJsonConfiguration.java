@@ -5,9 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Event payloads use the Jackson 2 API required by Spring Kafka's JSON
- * integration. Spring Boot 4 uses Jackson 3 for HTTP, so this mapper is kept
- * deliberately separate from MVC serialization.
+ * Existing event services use Jackson 2; Spring Boot 4 uses Jackson 3 for HTTP.
+ * Keep the event mapper separate from MVC serialization. Kafka transports
+ * JSON strings here; it does not require this mapper or enforce Registry schemas.
  */
 @Configuration
 public class EventJsonConfiguration {

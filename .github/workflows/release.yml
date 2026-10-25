@@ -1,0 +1,55 @@
+name: Release to staging
+
+on:
+  workflow_dispatch: # publishing/deployment requires an explicit operator action
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.image.outputs.value }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - run: ./mvnw --batch-mode verify
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      - id: image
+        run: echo "value=ghcr.io/${GITHUB_REPOSITORY}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+  staging:
+    needs: publish
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Trigger staging deployment
+        env:
+          DEPLOY_HOOK: ${{ secrets.STAGING_DEPLOY_HOOK }}
+          IMAGE: ${{ needs.publish.outputs.image }}
+        run: curl --fail --silent --show-error --request POST "${DEPLOY_HOOK}?image=${IMAGE}"
+      - name: Verify health and telemetry
+        env:
+          BASE_URL: ${{ vars.STAGING_URL }}
+        run: |
+          curl --fail --retry 12 --retry-delay 10 "${BASE_URL}/actuator/health"
+          curl --fail "${BASE_URL}/actuator/prometheus" | grep -q "jvm_memory_used_bytes"

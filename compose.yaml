@@ -6,7 +6,6 @@ services:
       POSTGRES_USER: ledger
       POSTGRES_PASSWORD: ${DB_PASSWORD:-ledger}
     ports:
-      # Host 15432: Windows Hyper-V excluded-port ranges swallow most of 5147-5763, taking 5432 with them.
       - "15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -14,7 +13,183 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ledger"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 20
+
+  kafka:
+    profiles: [platform]
+    image: confluentinc/cp-kafka:8.1.4
+    ports:
+      - "29092:29092"
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  schema-registry:
+    profiles: [platform]
+    image: confluentinc/cp-schema-registry:8.1.4
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: BACKWARD
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/subjects >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  schema-init:
+    profiles: [platform]
+    image: python:3.13-alpine
+    depends_on:
+      schema-registry:
+        condition: service_healthy
+    environment:
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    volumes:
+      - ./src/main/resources/schemas:/schemas:ro
+      - ./infra/schema-registry/register.py:/register.py:ro
+    command: ["python", "/register.py"]
+    restart: "no"
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/ledger
+      DB_USER: ledger
+      DB_PASSWORD: ${DB_PASSWORD:-ledger}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PAYMENTOPS_MESSAGING_MODE: ${PAYMENTOPS_MESSAGING_MODE:-local}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+      OTEL_TRACING_ENABLED: ${OTEL_TRACING_ENABLED:-false}
+      WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET:-local-development-only}
+      LOG_FILE: /var/log/paymentops/application.log
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+      LOGGING_STRUCTURED_FORMAT_FILE: ecs
+    volumes:
+      - app-logs:/var/log/paymentops
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  otel-collector:
+    profiles: [platform]
+    image: otel/opentelemetry-collector-contrib:0.116.1
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./infra/observability/otel-collector.yaml:/etc/otel/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889:8889"
+    depends_on:
+      - tempo
+      - loki
+
+  kafka-exporter:
+    profiles: [platform]
+    image: danielqsj/kafka-exporter:v1.8.0
+    command: ["--kafka.server=kafka:9092"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "9308:9308"
+
+  prometheus:
+    profiles: [platform]
+    image: prom/prometheus:v2.55.1
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      app:
+        condition: service_healthy
+
+  tempo:
+    profiles: [platform]
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./infra/observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"
+
+  loki:
+    profiles: [platform]
+    image: grafana/loki:3.2.1
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./infra/observability/loki.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+
+  promtail:
+    profiles: [platform]
+    image: grafana/promtail:3.2.1
+    command: ["-config.file=/etc/promtail/config.yaml"]
+    volumes:
+      - ./infra/observability/promtail.yaml:/etc/promtail/config.yaml:ro
+      - app-logs:/var/log/paymentops:ro
+    depends_on:
+      - loki
+
+  grafana:
+    profiles: [platform]
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-paymentops}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./infra/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
 
 volumes:
   pgdata:
+  app-logs:
+  prometheus-data:
+  tempo-data:
+  loki-data:
+  grafana-data:

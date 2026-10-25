@@ -4,7 +4,7 @@
 
 `PaymentOpsFlowTest`:
 
-- three requests using one idempotency key return one payment;
+- repeated requests using one idempotency key return one payment;
 - deterministic risk approval and per-transaction rejection;
 - authorization, capture, balanced posting, settlement, and reconciliation;
 - replay of the same capture event produces no duplicate posting;
@@ -25,12 +25,14 @@ Existing suites:
 - rate-limit rejection;
 - statement and account reconciliation batch jobs.
 
-## Failure and recovery matrix
+`EventIdempotencyTest` verifies a real PostgreSQL lock-observed duplicate race and rollback of claim plus effect on failure. The reordered early-refund test covers settlement evidence and post-refund reconciliation/capture replay.
+
+## Failure and recovery matrix (proposed drills unless noted)
 
 | Scenario | Injection | Expected evidence |
 |---|---|---|
 | Kafka unavailable | Stop broker, submit payment | API state + pending outbox persist; publish retries |
-| Crash before offset commit | Route same event twice | Duplicate metric/warning; one posting |
+| Replay (locally verified; not a Kafka crash drill) | Route same event twice | Duplicate metric/warning; one posting |
 | Delayed settlement | `SETTLEMENT_BEHAVIOR=DELAY` | Delayed timeline; missing exception; later resolution |
 | Duplicate settlement | `SETTLEMENT_BEHAVIOR=DUPLICATE` | Duplicate exception with both records |
 | Poison event | Publish incompatible known event | Indexed retries then dead-letter topic |
