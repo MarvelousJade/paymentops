@@ -3,7 +3,6 @@ package dev.ledger.event;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,14 +21,10 @@ public class IdempotentEventProcessor {
 
     @Transactional
     public boolean process(String consumerName, EventEnvelope event, Runnable effect) {
-        ProcessedEvent.Key key = new ProcessedEvent.Key(consumerName, event.eventId());
-        if (processed.existsById(key)) {
-            duplicate(consumerName, event);
-            return false;
-        }
-        try {
-            processed.saveAndFlush(new ProcessedEvent(consumerName, event.eventId()));
-        } catch (DataIntegrityViolationException race) {
+        // PostgreSQL waits for an in-flight conflicting claim. Unlike catching a
+        // unique-constraint exception, DO NOTHING keeps the transaction usable.
+        // The claim still rolls back with the effect if processing fails.
+        if (processed.claim(consumerName, event.eventId()) == 0) {
             duplicate(consumerName, event);
             return false;
         }

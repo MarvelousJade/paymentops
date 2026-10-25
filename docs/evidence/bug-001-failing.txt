@@ -1,0 +1,7 @@
+[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 16.86 s <<< FAILURE! -- in dev.ledger.event.EventIdempotencyTest
+java.util.concurrent.ExecutionException: org.springframework.transaction.UnexpectedRollbackException: Transaction silently rolled back because it has been marked as rollback-only
+Caused by: org.springframework.transaction.UnexpectedRollbackException: Transaction silently rolled back because it has been marked as rollback-only
+[ERROR]   EventIdempotencyTest.concurrentDeliveryCommitsOneEffectAndReturnsDuplicateWithoutTransactionFailure:58 » Execution org.springframework.transaction.UnexpectedRollbackException: Transaction silently rolled back because it has been marked as rollback-only
+[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0
+[INFO] BUILD FAILURE
+[INFO] Total time:  28.062 s
