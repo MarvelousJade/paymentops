@@ -21,6 +21,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.List;
 
 @Service
 public class AuthService {
@@ -83,8 +84,11 @@ public class AuthService {
     private TokenResponse issueTokens(Customer customer) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("paymentops-local")
                 .subject(String.valueOf(customer.getId()))
                 .claim("email", customer.getEmail())
+                .claim("roles", List.of(customer.getRole().name()))
+                .claim("scope", scopes(customer))
                 .issuedAt(now)
                 .expiresAt(now.plus(jwtProps.accessTtl()))
                 .build();
@@ -112,5 +116,13 @@ public class AuthService {
 
     private static ApiException badCredentials() {
         return new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+    }
+
+    private static String scopes(Customer customer) {
+        return switch (customer.getRole()) {
+            case MERCHANT -> "payments:read payments:write";
+            case OPERATOR -> "payments:read payments:write operations:read operations:write";
+            case AUDITOR -> "payments:read operations:read";
+        };
     }
 }

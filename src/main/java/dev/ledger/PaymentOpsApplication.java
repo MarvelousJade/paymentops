@@ -6,15 +6,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @OpenAPIDefinition(info = @Info(
-        title = "Ledger Service API",
+        title = "PaymentOps API",
         version = "1.0",
-        description = "Payments ledger: double-entry bookkeeping, idempotent transfers, async settlement via SQS/Lambda. Register, then Authorize with the returned access token."))
+        description = "Event-driven payment operations: authorization, capture, refunds, transactional outbox, balanced ledger posting, settlement, reconciliation, and signed webhooks."))
 
 @SpringBootApplication
-public class LedgerServiceApplication {
+public class PaymentOpsApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(LedgerServiceApplication.class, args);
+		SpringApplication.run(PaymentOpsApplication.class, args);
 	}
 
 }
