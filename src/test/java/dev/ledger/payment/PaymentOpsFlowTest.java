@@ -54,6 +54,12 @@ class PaymentOpsFlowTest {
 
     @Autowired
     dev.ledger.settlement.SettlementRecordRepository settlementRecords;
+    @Autowired
+    dev.ledger.account.AccountRepository accounts;
+    @Autowired
+    PaymentService paymentService;
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     RestTestClient client;
 
@@ -198,6 +204,70 @@ class PaymentOpsFlowTest {
         assertThat(postings.countByPaymentId(id)).isZero();
         client.get().uri("/accounts/" + source).header("Authorization", bearer(merchant))
                 .exchange().expectBody().jsonPath("$.balance").isEqualTo("100.00");
+    }
+
+    @Test
+    void insufficientFundsCannotPostAndCancelCannotBeCaptured() {
+        String merchant = register();
+        long source = account(merchant, "1.00");
+        long destination = account(register(), null);
+        UUID id = UUID.fromString((String) createPayment(merchant, UUID.randomUUID().toString(),
+                source, destination, "2.00").expectBody(Map.class)
+                .returnResult().getResponseBody().get("id"));
+        drain(2);
+        client.post().uri("/api/v1/payments/" + id + "/capture")
+                .header("Authorization", bearer(merchant)).header("Idempotency-Key", "insufficient")
+                .exchange().expectStatus().isAccepted();
+        drain(4);
+        assertThat(payments.findById(id).orElseThrow().getStatus()).isEqualTo(Payment.Status.FAILED);
+        assertThat(postings.countByPaymentId(id)).isZero();
+        assertThat(accounts.findById(source).orElseThrow().getBalanceCents()).isEqualTo(100);
+        assertThat(accounts.findById(destination).orElseThrow().getBalanceCents()).isZero();
+
+        UUID cancelled = UUID.fromString((String) createPayment(merchant, UUID.randomUUID().toString(),
+                source, destination, "1.00").expectBody(Map.class)
+                .returnResult().getResponseBody().get("id"));
+        client.post().uri("/api/v1/payments/" + cancelled + "/cancel")
+                .header("Authorization", bearer(merchant)).header("Idempotency-Key", "cancel")
+                .exchange().expectStatus().isOk();
+        drain(3); // stale risk delivery must not resurrect a cancelled payment
+        client.post().uri("/api/v1/payments/" + cancelled + "/capture")
+                .header("Authorization", bearer(merchant)).header("Idempotency-Key", "after-cancel")
+                .exchange().expectStatus().isEqualTo(409);
+        assertThat(payments.findById(cancelled).orElseThrow().getStatus()).isEqualTo(Payment.Status.CANCELLED);
+        assertThat(postings.countByPaymentId(cancelled)).isZero();
+    }
+
+    @Test
+    void concurrentCreateRequestsClaimOnePaymentAndOneOutgoingRequest() throws Exception {
+        String merchant = register();
+        long source = account(merchant, "100.00");
+        long destination = account(register(), null);
+        long merchantId = accounts.findById(source).orElseThrow().getCustomerId();
+        String key = UUID.randomUUID().toString();
+        var start = new java.util.concurrent.CountDownLatch(1);
+        java.util.List<java.util.concurrent.Future<PaymentDtos.PaymentResponse>> results = new java.util.ArrayList<>();
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(8)) {
+            for (int i = 0; i < 8; i++) {
+                results.add(pool.submit(() -> {
+                    if (!start.await(10, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("start timeout");
+                    return paymentService.create(merchantId, key, source, destination, 3_000,
+                            "CAD", "tok_concurrent_test", UUID.randomUUID());
+                }));
+            }
+            start.countDown();
+            UUID id = results.getFirst().get(15, java.util.concurrent.TimeUnit.SECONDS).id();
+            for (var result : results) {
+                assertThat(result.get(15, java.util.concurrent.TimeUnit.SECONDS).id()).isEqualTo(id);
+            }
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM payments WHERE merchant_id=? AND idempotency_key=?",
+                    Long.class, merchantId, key)).isEqualTo(1);
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM outbox_events WHERE aggregate_id=? AND event_type=?",
+                    Long.class, id.toString(), PaymentService.REQUESTED)).isEqualTo(1);
+            assertThat(postings.countByPaymentId(id)).isZero();
+        } finally {
+            start.countDown();
+        }
     }
 
     @Test
