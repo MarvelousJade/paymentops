@@ -19,5 +19,6 @@
 - Simulated webhooks; no audited delivery requeue API. Receiver idempotency/replay protection and secure endpoint management would be required for real delivery.
 - Local identity, in-memory rate limiting, public health/metrics, development secrets/defaults and exposed Compose ports require a production threat model before shared deployment. No production-readiness claim.
 - Local checks do not establish hosted CI/security/deployment success; publication-time results are available in GitHub Actions. Dependency/image findings are not claimed clean. Repository main was subsequently pushed with owner authorization; no deployment was performed. No repository distribution licence has been selected; public source availability does not grant an open-source licence.
-- No Docker engine/WSL distribution: legacy LocalStack integration and Docker lifecycle are not covered by the native PostgreSQL run.
+- No local Docker engine/WSL distribution: native PostgreSQL does not cover Docker lifecycle. Subsequent hosted CI at `0ef3009` passed 50 application tests including LocalStack and built the container. Full Compose platform runtime is still unverified.
+- Hosted security at `0ef3009` is not green: CodeQL passed, Trivy reported vulnerabilities, and Dependency-Check could not retrieve NVD data (429). Triage/upgrades/rescan remain follow-up work; no scanner gates were weakened.
 - Browser checks are programmatic and initial-screen visual inspection, not human usability/accessibility/mobile evaluation.

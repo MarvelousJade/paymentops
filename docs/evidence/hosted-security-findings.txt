@@ -1,0 +1,8 @@
+Source: 0ef300950f75aec5a608891fc2c7fd6c7e1217ad
+Run: https://github.com/MarvelousJade/paymentops/actions/runs/40246048460
+Trivy Java report: Total 23 (HIGH 17, CRITICAL 6).
+Trivy Go-tool report: Total 4 (HIGH 4, CRITICAL 0).
+These are scanner-reported findings, not verified exploitability or observed incidents.
+Dependency-Check: Error updating NVD data; NVD Returned Status Code: 429; NoDataException: No documents exist. Analysis could not complete.
+CodeQL: success. Dependency review: skipped on push.
+No scanner bypass/suppression or dependency remediation was performed in the publication cleanup.
