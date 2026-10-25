@@ -55,4 +55,8 @@ Provenance: intentionally introduced on isolated `shaoyu/learning` from verified
 - Verification: repaired PaymentOpsFlowTest passed 6/6, 0 errors/skips in 29.080 s. Test checks conflict code, retained original amount, zero financial postings and unchanged source balance. `docs/evidence/ctrl-001-*` preserves failing/passing summaries.
 - Lesson/interview explanation: idempotency is identity plus replay, not simply looking up a key. Strengthen HTTP tests so field omissions are detected. Personal investigation notes remain unprovided.
 
+## CTRL-002 — publication bookkeeping checkpoint
+
+Provenance: intentionally introduced on isolated `shaoyu/learning` after CTRL-001 repair. Marking publication before the transport acknowledges success models a plausible ordering mistake; failing evidence and repair will follow. Baseline working behavior already publishes only after successful send. No production incident is implied.
+
 - Verification beyond the app: settlement Lambda 9/9 unit/handler tests passed in 32.290 s; no AWS execution claimed. Docker/Compose clients were downloaded outside Git for config validation only, not an engine install.
