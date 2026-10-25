@@ -14,7 +14,7 @@ Learner-facing symptoms: [README](README.md). Both faults were intentionally int
 ## B — premature publication
 
 - Fault checkpoint: `3674349` (`refactor: update outbox publication bookkeeping`).
-- Repair: `fix: preserve pending outbox state until transport succeeds` (find exact hash with `git log --all --grep='preserve pending outbox state'`).
+- Repair: `ce8b501` (`fix: preserve pending outbox state until transport succeeds`).
 - Cause: set PUBLISHED before sending. A transport failure updated attempts/backoff but left the status outside the due-query's PENDING filter.
 - Tests: `OutboxDispatcherTest`, three cases: retry/success, exhaustion/replay and state at acknowledgement.
 - Evidence: `docs/evidence/ctrl-002-failing.txt` and passing summary; CTRL-002 journal entry.

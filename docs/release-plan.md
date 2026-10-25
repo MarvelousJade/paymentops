@@ -28,10 +28,10 @@ Follow-ups: real broker crash/offset drills, multi-instance dispatch leases, pag
 
 1. [x] Inspect repository/history and preserve pending work; create `shaoyu/rework`.
 2. [x] Review original references and define release acceptance before behavior changes.
-3. [ ] Establish database-backed baseline, review and commit existing application as a coherent checkpoint.
-4. [ ] Reproduce and repair meaningful retry/state defects with regression tests.
-5. [ ] Make infrastructure optional; add runnable demo and raw measurement evidence.
-6. [ ] Isolate two realistic fault investigations; preserve checkpoints, tests and separate repairs; integrate only corrected state.
-7. [ ] Run final checks, inspect changes, document interview/resume evidence and limitations.
+3. [x] Establish database-backed baseline, review and commit existing application as a coherent checkpoint.
+4. [x] Reproduce and repair meaningful retry/state defects with regression tests.
+5. [x] Make infrastructure optional; add runnable demo and raw measurement evidence.
+6. [x] Isolate two realistic fault investigations; preserve checkpoints, tests and separate repairs; integrate only corrected state.
+7. [x] Run final checks, inspect changes, document interview/resume evidence and limitations.
 
 Measurements: absolute end-to-end local workflow times, repeated identical workloads, status/balance/posting correctness. No valid payment-performance baseline currently exists, so no speedup percentage will be claimed. Test counts establish verification scope, not user impact.

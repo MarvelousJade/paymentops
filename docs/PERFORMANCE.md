@@ -2,10 +2,9 @@
 
 ## PaymentOps workflow
 
-No PaymentOps load result has been recorded in this repository yet. Run
-`k6/paymentops.js` against a named build and replace this statement with the
-generated summary plus environment details. No estimated or aspirational
-numbers are reported.
+Five warm **local synthetic HTTP workflow** measurements are now recorded in [impact evidence](impact-and-resume-evidence.md): median 1205.397 ms, range 1186.547–1459.896 ms, with one warm-up excluded. Metadata, per-request samples, jar hash and database/restart correctness checks are retained. This is not a load test, throughput result or improvement claim.
+
+No PaymentOps **load/Kafka** result has been recorded. `k6/paymentops.js` is a proposed workload with explicit correctness/failure thresholds, not evidence of a completed run. Use a named build and preserve its actual summary before making load claims.
 
 Required evidence:
 

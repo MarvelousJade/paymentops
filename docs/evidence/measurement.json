@@ -1,0 +1,32 @@
+{
+  "sourceCommit": "c8a3b85f657d9afe306030ada13eb06cc2ebe7c5",
+  "date": "2026-10-25T23:26:53.753Z",
+  "os": "Windows_NT 10.0.26300",
+  "cpu": "AMD Ryzen 5 3600 6-Core Processor              ",
+  "logicalCpus": 12,
+  "totalMemoryBytes": 17101787136,
+  "java": "Temurin 21.0.12.1+1",
+  "postgresql": "16.4",
+  "jdbc": "42.7.11",
+  "node": "v22.23.3",
+  "messaging": "local",
+  "settlement": "SETTLE simulator",
+  "webhooks": "simulated://merchant",
+  "outboxPollMs": 250,
+  "httpPollMs": 50,
+  "repetitions": 5,
+  "warmups": 1,
+  "cache": "warm JVM/database, new users/accounts/payment each repetition; retained growing demo database",
+  "jarSha256": "13e39231b67c3c3eb564e21356e95ad739e20bca61a51693b0398e6e82cf8150",
+  "workflowMs": [
+    1459.896,
+    1186.547,
+    1221.23,
+    1202.075,
+    1205.397
+  ],
+  "medianWorkflowMs": 1205.397,
+  "minWorkflowMs": 1186.547,
+  "maxWorkflowMs": 1459.896,
+  "baseline": "none; absolute result only"
+}

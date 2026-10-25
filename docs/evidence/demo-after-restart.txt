@@ -1,0 +1,5 @@
+PASS a02e8c33-2b32-4877-8f49-00ddf1938504 postings=3 balanced_pairs=3 settled_records=1 refunded_cents=3000 balances=10000,0 open_exceptions=0
+PASS bfcbee21-9ab9-4065-afdc-ae2868ad2e41 postings=3 balanced_pairs=3 settled_records=1 refunded_cents=3000 balances=10000,0 open_exceptions=0
+PASS 6ba97174-3c0f-4bd1-852e-d3117e836dfb postings=3 balanced_pairs=3 settled_records=1 refunded_cents=3000 balances=10000,0 open_exceptions=0
+PASS 497dbd48-ee73-4d30-8dfd-c9ddc652bf9e postings=3 balanced_pairs=3 settled_records=1 refunded_cents=3000 balances=10000,0 open_exceptions=0
+PASS c2244b7e-ee84-4d08-9a39-6dcf69ea91dd postings=3 balanced_pairs=3 settled_records=1 refunded_cents=3000 balances=10000,0 open_exceptions=0

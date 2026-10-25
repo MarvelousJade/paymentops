@@ -1,0 +1,305 @@
+{
+  "kind": "synthetic-local-http-demo",
+  "date": "2026-10-25T23:25:49.810Z",
+  "paymentId": "6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+  "correlationId": "fa315b39-7aed-407b-b951-128a105790f7",
+  "source": 9,
+  "destination": 10,
+  "finalStatus": "REFUNDED",
+  "finalBalances": [
+    "100.00",
+    "0.00"
+  ],
+  "workflowMs": 1221.23,
+  "totalMs": 1570.284,
+  "requests": 47,
+  "timelineEntries": 9,
+  "webhookRecords": 3,
+  "reconciledPayments": 5,
+  "openExceptionsForPayment": 0,
+  "node": "v22.23.3",
+  "samples": [
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "ms": 126.023
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "status": 201,
+      "ms": 77.549
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "status": 201,
+      "ms": 77.289
+    },
+    {
+      "method": "POST",
+      "path": "/accounts",
+      "status": 201,
+      "ms": 7.455
+    },
+    {
+      "method": "POST",
+      "path": "/accounts/9/deposits",
+      "status": 201,
+      "ms": 8.748
+    },
+    {
+      "method": "POST",
+      "path": "/accounts",
+      "status": 201,
+      "ms": 6.267
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "status": 202,
+      "ms": 13.674
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "status": 202,
+      "ms": 5.151
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "status": 409,
+      "ms": 7.209
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 404,
+      "ms": 6.326
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.228
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.492
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/capture",
+      "status": 202,
+      "ms": 11.745
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.931
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 6.265
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.693
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 4.911
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.987
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 7.044
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 4.88
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.67
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.505
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 6.593
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/9",
+      "status": 200,
+      "ms": 5.161
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/10",
+      "status": 200,
+      "ms": 3.931
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/operations/reconciliation/run",
+      "status": 200,
+      "ms": 21.015
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/refunds",
+      "status": 202,
+      "ms": 12.902
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/refunds",
+      "status": 202,
+      "ms": 7.017
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/refunds",
+      "status": 409,
+      "ms": 7.855
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.683
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.719
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.023
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 6.173
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/refunds",
+      "status": 409,
+      "ms": 6.392
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/refunds",
+      "status": 202,
+      "ms": 10.38
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.396
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 6.074
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 7.549
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 6.057
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb",
+      "status": 200,
+      "ms": 5.55
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/capture",
+      "status": 202,
+      "ms": 5.823
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/9",
+      "status": 200,
+      "ms": 5.437
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/10",
+      "status": 200,
+      "ms": 3.827
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/operations/reconciliation/run",
+      "status": 200,
+      "ms": 19.19
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/operations/reconciliation/exceptions",
+      "status": 200,
+      "ms": 6.637
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/timeline",
+      "status": 200,
+      "ms": 6.009
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/6ba97174-3c0f-4bd1-852e-d3117e836dfb/deliveries",
+      "status": 200,
+      "ms": 8.455
+    }
+  ]
+}

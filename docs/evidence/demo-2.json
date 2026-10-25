@@ -1,0 +1,299 @@
+{
+  "kind": "synthetic-local-http-demo",
+  "date": "2026-10-25T23:25:48.148Z",
+  "paymentId": "bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+  "correlationId": "4e309027-9d99-464b-ad17-dd1cf5ac9c88",
+  "source": 7,
+  "destination": 8,
+  "finalStatus": "REFUNDED",
+  "finalBalances": [
+    "100.00",
+    "0.00"
+  ],
+  "workflowMs": 1186.547,
+  "totalMs": 1534.618,
+  "requests": 46,
+  "timelineEntries": 9,
+  "webhookRecords": 3,
+  "reconciledPayments": 4,
+  "openExceptionsForPayment": 0,
+  "node": "v22.23.3",
+  "samples": [
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "ms": 126.719
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "status": 201,
+      "ms": 75.889
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "status": 201,
+      "ms": 79.388
+    },
+    {
+      "method": "POST",
+      "path": "/accounts",
+      "status": 201,
+      "ms": 6.953
+    },
+    {
+      "method": "POST",
+      "path": "/accounts/7/deposits",
+      "status": 201,
+      "ms": 9.961
+    },
+    {
+      "method": "POST",
+      "path": "/accounts",
+      "status": 201,
+      "ms": 8.145
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "status": 202,
+      "ms": 14.816
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "status": 202,
+      "ms": 7.121
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "status": 409,
+      "ms": 7.825
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 404,
+      "ms": 6.445
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.894
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/capture",
+      "status": 202,
+      "ms": 10.787
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.145
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 6.185
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.483
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.671
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.195
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.265
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 6.662
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 7.229
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 7.242
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.919
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/7",
+      "status": 200,
+      "ms": 4.551
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/8",
+      "status": 200,
+      "ms": 5.841
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/operations/reconciliation/run",
+      "status": 200,
+      "ms": 18.655
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/refunds",
+      "status": 202,
+      "ms": 14.285
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/refunds",
+      "status": 202,
+      "ms": 8.087
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/refunds",
+      "status": 409,
+      "ms": 8.012
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 12.075
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 6.291
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 4.847
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 6.365
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/refunds",
+      "status": 409,
+      "ms": 6.646
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/refunds",
+      "status": 202,
+      "ms": 10.303
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.364
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 7.256
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.934
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.3
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41",
+      "status": 200,
+      "ms": 5.319
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/capture",
+      "status": 202,
+      "ms": 5.572
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/7",
+      "status": 200,
+      "ms": 5.655
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/8",
+      "status": 200,
+      "ms": 5.176
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/operations/reconciliation/run",
+      "status": 200,
+      "ms": 16.172
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/operations/reconciliation/exceptions",
+      "status": 200,
+      "ms": 5.643
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/timeline",
+      "status": 200,
+      "ms": 7.309
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payments/bfcbee21-9ab9-4065-afdc-ae2868ad2e41/deliveries",
+      "status": 200,
+      "ms": 7.171
+    }
+  ]
+}

@@ -49,4 +49,19 @@ Use one warm-up, then five sequential `node scripts/demo.mjs` invocations, each 
 - No Docker: use native PostgreSQL and the external test option in `verification.md`.
 - No runtime access during an interview: show a saved `docs/evidence/demo-*.json` result, trace IDs/timeline in code, and replay the targeted regression tests when infrastructure returns. Explain that saved output is local synthetic evidence, not a live production demonstration.
 
-Observed interaction is documented in verification: scripted HTTP, not human UI interaction or rendered visual inspection.
+## Optional browser and database checks
+
+For independent database verification, resolve the Maven PostgreSQL driver then run `java -cp <postgresql-jdbc.jar> scripts/VerifyDemo.java <printed-payment-uuid> ...` with explicit loopback DB_URL/DB_USER/DB_PASSWORD. The script is read-only and checks exactly three balanced event-linked postings, one external settlement, fully refunded totals, final balances and no open exception. Repeat after restarting the application to inspect saved state.
+
+For programmatic console interaction, start a **dedicated disposable** headless Chrome (do not expose its debugging port or attach to a personal browser):
+
+```bash
+chrome --headless --disable-gpu --no-first-run --user-data-dir=<temporary-dedicated-directory> \
+  --remote-debugging-port=9223 http://localhost:8080/operations.html
+# In another shell, with operator env vars already set:
+node scripts/console-smoke.mjs <saved-demo-json>
+```
+
+Chrome executable name/path varies by platform. Close the dedicated browser afterward. The script verifies error/success rendering, correlation search/repeat, empty-state refresh, reconciliation, 404 replay error and retained correlation input; it clears the token input before disconnecting. Run before importing the optional discrepancy, since the empty-state assertion expects no exceptions.
+
+Actual verification distinguishes scripted HTTP, programmatic browser interaction, initial rendered screenshot inspection and human interaction (not performed). See `verification.md`.

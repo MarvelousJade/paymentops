@@ -83,6 +83,21 @@ Invalid transitions return `409` with a stable error code and correlation ID.
 Repeated operations return the existing result after their idempotency
 contract has completed. Authorization does not reserve funds. Create/refund keys are payload-bound, while capture/cancel use aggregate state for replay. Responses show current state. Refund state and external settlement are independent: settlement after an early refund retains the refund status and appends external evidence.
 
+## Component contracts and failure boundaries
+
+| Component | Purpose / input → output | Dependencies / likely failures |
+|---|---|---|
+| HTTP/payment service | JWT principal + validated amount/account/key → payment/refund ID/current status | Identity, repositories, transaction manager; ownership 404, validation 400, transition/payload conflict 409, rate limit 429 |
+| Risk rules | requested event → approve/review/reject + timeline/event | Payment history, configured limits, shared claim transaction; no fund reservation; review has no approval UI in this release |
+| Outbox/transport/router | committed row → handler delivery or retained retry/dead letter | SQL, JSON, local handlers or Kafka; serialization/send failure backs off; crash after send may duplicate; one dispatcher intended |
+| Consumer claim | consumer+event ID and effect → effect once or duplicate no-op | PostgreSQL ON CONFLICT, transaction proxy; failing effect rolls back claim and outgoing work |
+| Ledger posting | capture/refund event → balances, equal debit/credit, posting, next event | Payment/accounts locks, constraints; closed account/insufficient funds rejects without financial effect; ascending account-lock order limits deadlock risk |
+| Settlement/reconciliation | captured event/external records → external evidence, mismatch/resolution actions | SQL, simulator, claims; missing/duplicate/amount/late evidence classified; no real bank API or automatic financial correction |
+| Notification | terminal event → signed delivery record/history | Local simulation or configured HTTP endpoint, bounded timeout/retry; no delivery-requeue API and no proof of recipient effect |
+| Console/reporting | operator token + correlation/status → health/timeline/exception display | Operations HTTP APIs; 401/403/404 shown in output, input retained; no browser persistence of tokens |
+
+Production metrics increment in application code and are not transactional business evidence; rollbacks can over-count attempted effects. The database postings and immutable timeline are authoritative.
+
 ## Data ownership
 
 | Module | Owned tables |
