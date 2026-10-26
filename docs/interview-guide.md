@@ -6,7 +6,7 @@ PaymentOps traces synthetic payments through authorization, capture, balanced le
 
 ## 60-second introduction
 
-“Payment operations need more than a success flag: clients retry, settlement arrives separately, and refunds must not duplicate financial effects. This project links a payment timeline to immutable double-entry postings and external settlement evidence. API changes and outgoing events share a PostgreSQL transaction; consumers claim events with conflict-safe insertion in the same transaction as their effect. The delivered workflow runs locally without Kafka. Verification includes 48 native-PostgreSQL tests, a concurrent claim regression, and real HTTP payment/refund runs. Five warm local synthetic runs had a 1.205-second median workflow time with balances restored after refund. That is not throughput or production impact.”
+“Payment operations need more than a success flag: clients retry, settlement arrives separately, and refunds must not duplicate financial effects. This project links a payment timeline to immutable double-entry postings and external settlement evidence. API changes and outgoing events share a PostgreSQL transaction; consumers claim events with conflict-safe insertion in the same transaction as their effect. The delivered workflow runs locally without Kafka. Hosted verification includes 52 application tests, 9 separate Lambda tests, security scans, a concurrent claim regression, and real HTTP payment/refund runs. Five warm local synthetic runs had a 1.205-second median workflow time with balances restored after refund. That is not throughput or production impact.”
 
 Use this as project description, not a claim you personally implemented all existing code. Suggested motivation to personalize: “I wanted to understand what happens between accepting a payment request and proving that money moved only once.”
 
@@ -85,7 +85,7 @@ Baseline: none for this payment workflow; report absolute result only. Five sequ
 - Design: one deployable/PostgreSQL, package-by-feature, transactional outbox, local transport first.
 - Invariants: conserved money, equal posting sides, no overdraft, bounded refunds, payload-bound retries, atomic claims/effects.
 - Strongest debugging: PostgreSQL rollback-only race and early-refund settlement ordering.
-- Evidence: 48 PostgreSQL tests; separate 9 Lambda tests; five local HTTP runs, 1.205 s median; direct SQL before/after restart; browser interactions and initial rendered console inspected.
+- Evidence: 52 hosted application tests (including PostgreSQL/LocalStack and Swagger HTTP coverage); separate 9 Lambda tests; configured CodeQL/dependency/image gates pass. Five historical local HTTP runs had a 1.205 s median at the recorded older dependency set; SQL before/after restart and fresh post-security-update HTTP/SQL smoke pass. Browser interactions and initial rendered console were inspected.
 - Boundaries: not production, not Kafka recovery verification, no performance improvement percentage or adoption claim.
 - Next improvements: real broker recovery tests, dispatcher leases, pagination, reservation semantics and production security requirements only when justified.
 - Ownership: distinguish pre-existing implementation, repository changes and what you personally studied/performed; use factual project claims until personal contribution is confirmed.

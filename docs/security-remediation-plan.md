@@ -11,8 +11,10 @@ PaymentOps remains a synthetic payment-operations portfolio application for deve
 - [x] Keep both Maven test suites passing; resolve any upgrade regressions with tests.
 - [x] Make Dependency-Check complete against fresh official NVD data without requiring a privately provisioned API key or weakening its CVSS/error gate.
 - [x] Run hosted CI, CodeQL, dependency scanning and rebuilt-image scanning; inspect real reports, not just job labels.
-- [ ] Smoke-test default Compose startup, HTTP documentation assets and runtime permissions after changing the base image.
-- [ ] Commit evidence/journal, integrate corrected changes into main, push and inspect final status. Never claim that passing scanners proves absence of vulnerabilities.
+- [x] Smoke-test default Compose startup, HTTP documentation assets and runtime permissions after changing the base image.
+- [x] Commit fixes and verification evidence/journal; complete passing branch checks before main integration.
+
+Final handoff requirement: integrate the verified branch into main, push, inspect the merged result's hosted status and report it separately after this source-specific evidence is committed. Never claim that passing scanners proves absence of vulnerabilities.
 
 ## Initial evidence
 

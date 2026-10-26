@@ -1,0 +1,162 @@
+{
+  "sourceCommit": "cb0a2e75eee98f6a203d2d03360e1a2a0b4eef53",
+  "subsequentRuntimeVerification": {
+    "sourceCommit": "ed9c50ce98bcf43138ffc25464239cd76c887e6c",
+    "ci": "https://github.com/MarvelousJade/paymentops/actions/runs/40248711117",
+    "security": "https://github.com/MarvelousJade/paymentops/actions/runs/40248711141",
+    "bothWorkflows": "success",
+    "defaultCompose": "healthy db/app, HTTP OpenAPI/Swagger, patched sanitizer, non-root, no Pebble",
+    "cleanup": "isolated project containers and volumes removed",
+    "evidence": "security-compose-verification.txt"
+  },
+  "ci": {
+    "url": "https://github.com/MarvelousJade/paymentops/actions/runs/40248195136",
+    "result": "success",
+    "application": {
+      "tests": 52,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "mavenTime": "02:06 min",
+      "includes": "PostgreSQL Testcontainers, two LocalStack async tests, two Swagger HTTP tests"
+    },
+    "lambda": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "mavenTime": "9.304 s"
+    },
+    "containerBuild": "success"
+  },
+  "security": {
+    "url": "https://github.com/MarvelousJade/paymentops/actions/runs/40248195104",
+    "result": "success",
+    "codeql": "success",
+    "dependencyReview": "skipped: pull-request-only job; this run is a push",
+    "dependencyCheck": {
+      "threshold": 7,
+      "failOnError": true,
+      "autoUpdate": true,
+      "suppressionsAdded": 0,
+      "projects": {
+        "application": {
+          "result": "success",
+          "scanner": "13.0.0",
+          "dataSources": [
+            {
+              "name": "NVD API Last Checked",
+              "timestamp": "2026-10-26T00:13:08Z"
+            },
+            {
+              "name": "NVD API Last Modified",
+              "timestamp": "2026-10-25T18:00:12-04"
+            },
+            {
+              "name": "NVD Cache Last Checked",
+              "timestamp": "2026-10-26T00:13:08Z"
+            },
+            {
+              "name": "NVD Cache Last Modified",
+              "timestamp": "2026-10-25T18:00:12-04"
+            }
+          ],
+          "reportSha256": "e0546e35dc4458f3c7bcbbc86a115f5ec9678ec81f1ed1ed28af4922965f3fef",
+          "findings": [
+            {
+              "artifact": "kafka-clients-4.1.2.jar",
+              "findings": [
+                {
+                  "id": "CVE-2026-41115",
+                  "cvss3": 4.3
+                }
+              ]
+            },
+            {
+              "artifact": "opentelemetry-api-1.55.0.jar",
+              "findings": [
+                {
+                  "id": "CVE-2026-54285",
+                  "cvss3": 5.3
+                }
+              ]
+            }
+          ]
+        },
+        "lambda": {
+          "result": "success",
+          "scanner": "13.0.0",
+          "dataSources": [
+            {
+              "name": "NVD API Last Checked",
+              "timestamp": "2026-10-26T00:13:08Z"
+            },
+            {
+              "name": "NVD API Last Modified",
+              "timestamp": "2026-10-25T18:00:12-04"
+            },
+            {
+              "name": "NVD Cache Last Checked",
+              "timestamp": "2026-10-26T00:13:08Z"
+            },
+            {
+              "name": "NVD Cache Last Modified",
+              "timestamp": "2026-10-25T18:00:12-04"
+            }
+          ],
+          "reportSha256": "64d7d45fb0e74304202ba2857041cab86380af7eb435c0938e562175b3c162b7",
+          "findings": []
+        }
+      },
+      "artifactId": 12619466772,
+      "artifactZipSha256": "fa4e4b3052fe3e443120fe5bf80e774f0e8fd28e6be9ce7cefb9af8fd966fdfa",
+      "authenticatedSonatypeAnalysis": "not configured; analyzer automatically unavailable"
+    },
+    "trivy": {
+      "result": "success",
+      "filter": {
+        "severities": [
+          "HIGH",
+          "CRITICAL"
+        ],
+        "ignoreUnfixed": true
+      },
+      "createdAt": "2026-10-26T00:14:00.415803308Z",
+      "imageId": "sha256:86af48169780bc5dcddd3e23b59fe782e96047ad4365892604f1ebc6ad3f103d",
+      "os": {
+        "Family": "ubuntu",
+        "Name": "24.04"
+      },
+      "targets": [
+        {
+          "target": "paymentops:scan (ubuntu 24.04)",
+          "type": "ubuntu",
+          "reportedVulnerabilities": 0,
+          "reportedSecrets": 0
+        },
+        {
+          "target": "Java",
+          "type": "jar",
+          "reportedVulnerabilities": 0,
+          "reportedSecrets": 0
+        }
+      ],
+      "reportSha256": "453541e857376f67049f540697fabba32dfe616807453fbd06675548028213de",
+      "artifactId": 12620135740,
+      "artifactZipSha256": "03114fa52e0e3f7ba50b4cc3df3edf2891a4d74ab8ba9c8d9392d71b1bc0614d"
+    }
+  },
+  "localSmoke": {
+    "applicationSource": "83c8179",
+    "jarSha256": "d061e166a6b6de3ad290858240a53b6541ce1d5465588f3ea1e2cea8b675b97f",
+    "workflow": "security-demo-after-update.json",
+    "database": "security-demo-database.txt",
+    "swagger": "HTTP 200; actual served DOMPurify 3.4.16",
+    "note": "Fresh synthetic post-upgrade smoke, not an additional historical benchmark sample."
+  },
+  "limitations": [
+    "No claim of zero vulnerabilities: scans are bounded by coverage, database freshness and configured gates.",
+    "Two non-blocking CPE matches remain visible; see security-remaining-triage.json.",
+    "This run builds/scans the image; separate subsequent Compose-runtime verification must be read independently."
+  ]
+}
