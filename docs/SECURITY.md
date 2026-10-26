@@ -40,5 +40,37 @@ horizontal scaling.
 6. Record discovery, decision, patch, verification, and release references in
    the vulnerability ticket.
 
-Dependency-Check's first NVD synchronization can take significant time. CI
-should use a maintained mirror/cache for reliable operational use.
+## Reproducible dependency scanning
+
+CI scans **both** `pom.xml` and the independent `settlement-lambda/pom.xml`
+with Dependency-Check 13.0.0. It uses NVD's official JSON 2.0 yearly/modified
+feeds instead of paginating the rate-limited API:
+
+```bash
+./mvnw -B -DskipTests org.owasp:dependency-check-maven:13.0.0:check \
+  '-DnvdDatafeedUrl=https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{0}.json.gz' \
+  -DfailBuildOnCVSS=7 -DfailOnError=true -Dformat=ALL
+# Repeat with -f settlement-lambda/pom.xml.
+```
+
+The first full feed import takes several minutes. CI restores a versioned,
+daily database cache, then leaves automatic freshness checks enabled (the
+tool's default four-hour update interval). The feeds can lag the live API;
+review their reported last-modified timestamps. Update/download/analysis
+errors still fail the job, and either project's blocking finding fails it.
+Reports are retained even on failure. No NVD key, commercial mirror or
+suppression is required. Maven may need `-DpathToCore=<dotnet executable>`
+when .NET 8 is outside PATH; the assembly analyzer needs that runtime even
+for native DLLs nested in Java archives. CI installs it explicitly rather
+than disabling an analyzer. Authenticated Sonatype Guide/OSS Index is not
+configured or claimed; the tool reports that limitation.
+
+The application uses Boot 4.0.9 with scoped patched transitive overrides.
+The standalone Lambda has its own SDK/Jackson BOMs and only ships the HTTP
+transport used by its synchronous client. The explicit Temurin
+`21-jre-noble` runtime avoids an unrelated inherited Pebble daemon. Match
+`springdoc.swagger-ui.version` in runtime/test configuration to the managed
+webjar whenever updating it; HTTP tests verify the real served bundle.
+See the journal and `evidence/security-remaining-triage.json` for unsuppressed
+non-applicable CPE matches. These remain visible rather than being hidden.
+Passing gates is not proof of zero vulnerabilities or production readiness.

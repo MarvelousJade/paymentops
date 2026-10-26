@@ -9,7 +9,7 @@ PaymentOps remains a synthetic payment-operations portfolio application for deve
 - [x] Reproduce and inventory the reported Java/container findings; inspect Lambda dependencies too.
 - [x] Upgrade the smallest compatible patched dependency set and use an explicit supported runtime base without unnecessary daemons.
 - [x] Keep both Maven test suites passing; resolve any upgrade regressions with tests.
-- [ ] Make Dependency-Check complete against fresh official NVD data without requiring a privately provisioned API key or weakening its CVSS/error gate.
+- [x] Make Dependency-Check complete against fresh official NVD data without requiring a privately provisioned API key or weakening its CVSS/error gate.
 - [ ] Run hosted CI, CodeQL, dependency scanning and rebuilt-image scanning; inspect real reports, not just job labels.
 - [ ] Commit evidence/journal, integrate corrected changes into main, push and inspect final status. Never claim that passing scanners proves absence of vulnerabilities.
 
