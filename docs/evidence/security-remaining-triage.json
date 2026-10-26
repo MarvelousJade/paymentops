@@ -1,0 +1,25 @@
+{
+  "scanner": "Dependency-Check 13.0.0",
+  "suppressionsAdded": 0,
+  "findings": [
+    {
+      "artifact": "org.apache.kafka:kafka-clients:4.1.2",
+      "id": "CVE-2026-41115",
+      "cvss3": 4.3,
+      "assessment": "Broker ACL documentation mismatch, not an erroneous Java client authorization implementation. Apache explicitly says DESCRIBE GROUP is the correct permission. The default application uses local transport; the optional local demonstration broker is not a secured production installation. Production broker ACLs must be reviewed; changing client versions is not an ACL fix.",
+      "reference": "https://kafka.apache.org/community/cve-list/"
+    },
+    {
+      "artifact": "io.opentelemetry:opentelemetry-api:1.55.0",
+      "id": "CVE-2026-54285",
+      "cvss3": 5.3,
+      "assessment": "Wrong ecosystem CPE match: advisory affects @opentelemetry/core in JavaScript, not the io.opentelemetry Java API artifact. No JavaScript OpenTelemetry runtime is shipped by this application.",
+      "reference": "https://osv.dev/vulnerability/CVE-2026-54285"
+    }
+  ],
+  "limitations": [
+    "NVD/CPE matching is heuristic; passing a threshold does not prove absence of vulnerabilities.",
+    "No exploitation or real customer impact was observed or claimed.",
+    "No suppression was needed; the informational matches remain visible in reports."
+  ]
+}

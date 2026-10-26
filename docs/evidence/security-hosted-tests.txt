@@ -1,0 +1,25 @@
+Source: cb0a2e75eee98f6a203d2d03360e1a2a0b4eef53
+Run: https://github.com/MarvelousJade/paymentops/actions/runs/40248195136
+2026-10-26T00:13:18.6923289Z [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.80 s -- in dev.ledger.PaymentOpsApplicationTests
+2026-10-26T00:13:18.8002943Z [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.172 s -- in dev.ledger.transfer.RateLimiterTest
+2026-10-26T00:13:24.6366120Z [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.842 s -- in dev.ledger.transfer.TransferFlowTest
+2026-10-26T00:13:28.3132158Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.672 s -- in dev.ledger.transfer.MoneyConservationTest
+2026-10-26T00:13:57.5317877Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.21 s -- in dev.ledger.transfer.AsyncSettlementFlowTest
+2026-10-26T00:13:58.2799076Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.734 s -- in dev.ledger.event.OutboxDispatcherTest
+2026-10-26T00:14:04.9564919Z [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.647 s -- in dev.ledger.event.KafkaConfigurationTest
+2026-10-26T00:14:09.7793400Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.821 s -- in dev.ledger.event.EventIdempotencyTest
+2026-10-26T00:14:11.3169769Z [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.529 s -- in dev.ledger.account.AccountFlowTest
+2026-10-26T00:14:18.2231818Z [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.906 s -- in dev.ledger.payment.PaymentOpsFlowTest
+2026-10-26T00:14:18.6504628Z [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.422 s -- in dev.ledger.auth.AuthServiceTest
+2026-10-26T00:14:19.3322839Z [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.680 s -- in dev.ledger.auth.AuthFlowTest
+2026-10-26T00:14:22.6094587Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.272 s -- in dev.ledger.statement.BatchJobsTest
+2026-10-26T00:14:23.2783062Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.670 s -- in dev.ledger.common.ApiDocumentationTest
+2026-10-26T00:14:23.2869660Z [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in dev.ledger.common.MoneyTest
+2026-10-26T00:14:26.5778548Z [INFO] Tests run: 52, Failures: 0, Errors: 0, Skipped: 0
+2026-10-26T00:14:30.0709289Z [INFO] BUILD SUCCESS
+2026-10-26T00:14:30.0773213Z [INFO] Total time:  02:06 min
+2026-10-26T00:14:38.1333069Z [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.462 s -- in dev.ledger.settlement.SettlementHandlerTest
+2026-10-26T00:14:38.1396652Z [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s -- in dev.ledger.settlement.RulesTest
+2026-10-26T00:14:38.4630566Z [INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+2026-10-26T00:14:40.6567847Z [INFO] BUILD SUCCESS
+2026-10-26T00:14:40.6581083Z [INFO] Total time:  9.304 s

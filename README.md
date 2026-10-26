@@ -75,7 +75,7 @@ docker compose --profile platform up --build
 
 This adds Kafka, Schema Registry, OpenTelemetry Collector, Prometheus, Grafana, Tempo, Loki and supporting exporters. Start/order availability is handled by outbox retries; default local mode does not need these services. Schema registration is illustrative: the producer currently sends JSON strings and does not enforce Registry schemas. Actual broker recovery and dashboard rendering remain unverified on the current host.
 
-GitHub workflows define CI and security checks. Publishing the repository does not deploy the application: staging image publication/deployment is **manual** and requires configured protected environments/secrets. Hosted check results are available in GitHub Actions; local verification is documented separately.
+GitHub workflows define CI and security checks. Publishing the repository does not deploy the application: staging image publication/deployment is **manual** and requires configured protected environments/secrets. Hosted verification now covers 52 application tests, 9 separate Lambda tests, default db+app Compose startup/health/permissions, CodeQL and both dependency/image security gates. The NVD synchronization failure and reported vulnerable dependencies were repaired without weaker thresholds or suppressions. Exact source hashes, scan filters, non-applicable advisory matches and limitations are in [verification](docs/verification.md); this is not a production-security guarantee.
 
 ## Read next
 

@@ -1,0 +1,1 @@
+PASS 9830a8d1-9723-48fe-8941-d08891b8fd5e postings=3 balanced_pairs=3 settled_records=1 refunded_cents=3000 balances=10000,0 open_exceptions=0

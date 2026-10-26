@@ -2,7 +2,7 @@ name: Security
 
 on:
   push:
-    branches: [main]
+    branches: [main, shaoyu/rework]
   pull_request:
   schedule:
     - cron: "17 6 * * 1"
@@ -48,12 +48,42 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - name: OWASP Dependency-Check
-        run: >-
-          ./mvnw --batch-mode -DskipTests
-          org.owasp:dependency-check-maven:12.2.2:check
-          -DfailBuildOnCVSS=7
-          -Dformat=HTML
+      # The assembly analyzer inspects native DLLs bundled in Java archives too.
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+      - name: Date for vulnerability cache
+        id: cache-date
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - name: Cache NVD database
+        uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/dependency-check-data
+          key: ${{ runner.os }}-dependency-check-13-${{ steps.cache-date.outputs.day }}
+          restore-keys: ${{ runner.os }}-dependency-check-13-
+      - name: OWASP Dependency-Check (application and Lambda)
+        env:
+          NVD_DATAFEED_URL: 'https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{0}.json.gz'
+        run: |
+          status=0
+          for pom in pom.xml settlement-lambda/pom.xml; do
+            ./mvnw --batch-mode -f "$pom" -DskipTests \
+              org.owasp:dependency-check-maven:13.0.0:check \
+              "-DnvdDatafeedUrl=$NVD_DATAFEED_URL" \
+              "-DdataDirectory=$RUNNER_TEMP/dependency-check-data" \
+              -DfailBuildOnCVSS=7 -DfailOnError=true -Dformat=ALL || status=1
+          done
+          exit "$status"
+      - name: Retain dependency reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: dependency-check-reports
+          path: |
+            target/dependency-check-report.html
+            target/dependency-check-report.json
+            settlement-lambda/target/dependency-check-report.html
+            settlement-lambda/target/dependency-check-report.json
 
   container-scan:
     runs-on: ubuntu-latest
@@ -65,7 +95,14 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: paymentops:scan
-          format: table
+          format: json
+          output: ${{ runner.temp }}/trivy-report.json
           exit-code: "1"
           ignore-unfixed: true
           severity: HIGH,CRITICAL
+      - name: Retain image scan report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: container-scan-report
+          path: ${{ runner.temp }}/trivy-report.json

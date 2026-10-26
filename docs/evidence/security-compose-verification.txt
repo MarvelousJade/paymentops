@@ -1,0 +1,35 @@
+Source: ed9c50ce98bcf43138ffc25464239cd76c887e6c
+CI: https://github.com/MarvelousJade/paymentops/actions/runs/40248711117
+Security: https://github.com/MarvelousJade/paymentops/actions/runs/40248711141
+Both workflows succeeded. Failure-only diagnostic step correctly skipped.
+2026-10-26T00:19:03.2609105Z [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.55 s -- in dev.ledger.PaymentOpsApplicationTests
+2026-10-26T00:19:03.3198909Z [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.117 s -- in dev.ledger.transfer.RateLimiterTest
+2026-10-26T00:19:09.2293414Z [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.923 s -- in dev.ledger.transfer.TransferFlowTest
+2026-10-26T00:19:13.1442064Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.915 s -- in dev.ledger.transfer.MoneyConservationTest
+2026-10-26T00:19:45.9002807Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 32.75 s -- in dev.ledger.transfer.AsyncSettlementFlowTest
+2026-10-26T00:19:46.7009102Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.779 s -- in dev.ledger.event.OutboxDispatcherTest
+2026-10-26T00:19:53.2811965Z [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.562 s -- in dev.ledger.event.KafkaConfigurationTest
+2026-10-26T00:19:58.5326998Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.254 s -- in dev.ledger.event.EventIdempotencyTest
+2026-10-26T00:19:59.9879390Z [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.454 s -- in dev.ledger.account.AccountFlowTest
+2026-10-26T00:20:06.9667600Z [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.972 s -- in dev.ledger.payment.PaymentOpsFlowTest
+2026-10-26T00:20:07.3844602Z [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.417 s -- in dev.ledger.auth.AuthServiceTest
+2026-10-26T00:20:08.1654248Z [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.755 s -- in dev.ledger.auth.AuthFlowTest
+2026-10-26T00:20:11.8350814Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.686 s -- in dev.ledger.statement.BatchJobsTest
+2026-10-26T00:20:12.4159418Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.575 s -- in dev.ledger.common.ApiDocumentationTest
+2026-10-26T00:20:12.4203181Z [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in dev.ledger.common.MoneyTest
+2026-10-26T00:20:15.9613050Z [INFO] Tests run: 52, Failures: 0, Errors: 0, Skipped: 0
+2026-10-26T00:20:17.4124510Z [INFO] BUILD SUCCESS
+2026-10-26T00:20:17.4136841Z [INFO] Total time:  01:42 min
+2026-10-26T00:20:26.2909268Z [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.543 s -- in dev.ledger.settlement.SettlementHandlerTest
+2026-10-26T00:20:26.2984062Z [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in dev.ledger.settlement.RulesTest
+2026-10-26T00:20:26.6273569Z [INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+2026-10-26T00:20:28.6783937Z [INFO] BUILD SUCCESS
+2026-10-26T00:20:28.6798340Z [INFO] Total time:  9.928 s
+2026-10-26T00:21:30.1150448Z  Container paymentops-ci-db-1  Healthy
+2026-10-26T00:21:30.7389233Z  Container paymentops-ci-db-1  Healthy
+2026-10-26T00:21:50.7366932Z  Container paymentops-ci-app-1  Healthy
+2026-10-26T00:21:51.6273727Z {"groups":["liveness","readiness"],"status":"UP"}PASS Compose health, OpenAPI, Swagger sanitizer, non-root user and no Pebble daemon
+2026-10-26T00:21:54.0840559Z  Container paymentops-ci-app-1  Removed
+2026-10-26T00:21:54.1988716Z  Container paymentops-ci-db-1  Removed
+2026-10-26T00:21:54.3022195Z  Volume paymentops-ci_pgdata  Removed
+2026-10-26T00:21:54.3027063Z  Volume paymentops-ci_app-logs  Removed
