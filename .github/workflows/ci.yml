@@ -11,6 +11,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      COMPOSE_PROJECT_NAME: paymentops-ci
+      JWT_SECRET: Y2ktb25seS1rZXktY2ktb25seS1rZXktY2ktb25seS1rZXk=
+      WEBHOOK_SIGNING_SECRET: ci-only
     steps:
       - uses: actions/checkout@v6
       - name: Validate executable shell entry points
@@ -29,12 +33,26 @@ jobs:
             python -m json.tool "$schema" >/dev/null
           done
       - name: Validate local platform definition
-        run: JWT_SECRET=Y2ktb25seS1rZXktY2ktb25seS1rZXktY2ktb25seS1rZXk= docker compose config --quiet
-        env:
-          WEBHOOK_SIGNING_SECRET: ci-only
+        run: docker compose config --quiet
       - name: Unit and integration tests
         run: ./mvnw --batch-mode verify
       - name: Settlement Lambda tests
         run: ./mvnw --batch-mode -f settlement-lambda/pom.xml verify
       - name: Build application container without publishing
         run: docker build --tag paymentops:${{ github.sha }} .
+      - name: Smoke-test default Compose runtime
+        run: |
+          docker compose up --build --wait --wait-timeout 180 db app
+          curl --fail --silent --show-error http://localhost:8080/actuator/health
+          curl --fail --silent --show-error http://localhost:8080/v3/api-docs >/dev/null
+          curl --fail --silent --show-error http://localhost:8080/swagger-ui/index.html >/dev/null
+          curl --fail --silent --show-error http://localhost:8080/swagger-ui/swagger-ui-bundle.js > "$RUNNER_TEMP/swagger-ui-bundle.js"
+          node -e 'const fs = require("node:fs"), assert = require("node:assert/strict"); assert(fs.readFileSync(process.env.RUNNER_TEMP + "/swagger-ui-bundle.js", "utf8").includes("DOMPurify.version=\"3.4.16\""))'
+          docker compose exec -T app sh -c 'test ! -e /usr/bin/pebble && test "$(id -u)" != 0'
+          echo "PASS Compose health, OpenAPI, Swagger sanitizer, non-root user and no Pebble daemon"
+      - name: Compose diagnostics on failure
+        if: failure()
+        run: docker compose logs --no-color --tail 100
+      - name: Clean up Compose fixtures
+        if: always()
+        run: docker compose down --volumes --remove-orphans
