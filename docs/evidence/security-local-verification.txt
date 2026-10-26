@@ -1,0 +1,27 @@
+Worktree based on eb26539; dependency/configuration remediation on shaoyu/rework.
+Environment: Windows 11, Temurin 21.0.12.1+1, native PostgreSQL 16.4 on loopback 15432, .NET runtime 8.0.33 for Dependency-Check's assembly analyzer.
+
+Application:
+./mvnw -B '-Dtest=*,!AsyncSettlementFlowTest' -Dpaymentops.test.external-db=true -Dspring.datasource.url=jdbc:postgresql://127.0.0.1:15432/paymentops_release_test -Dspring.datasource.username=ledger -Dspring.datasource.password= verify
+Tests run: 50, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS; Total time: 49.995 s
+The 2 LocalStack tests are excluded from this local command, not counted as passed or skipped. Hosted default verification is still required.
+
+Lambda:
+./mvnw -B -f settlement-lambda/pom.xml clean verify
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS; Total time: 13.695 s
+
+Swagger regression:
+ApiDocumentationTest with -Dswagger-ui.version=5.32.2 -Dspringdoc.swagger-ui.version=5.32.2 and the external database settings above:
+Tests run: 2, Failures: 1, Errors: 0, Skipped: 0
+Failure: DOMPurify must be at least 3.4.12; served old bundle contains 3.3.2.
+Same test with patched dependencies/configuration: both pass within the full 50-test suite.
+
+Dependency scanning, repeated for -f pom.xml and -f settlement-lambda/pom.xml:
+./mvnw -B -DskipTests org.owasp:dependency-check-maven:13.0.0:check '-DnvdDatafeedUrl=https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{0}.json.gz' -DpathToCore=<portable-dotnet.exe> -DfailBuildOnCVSS=7 -Dformat=ALL
+Initial official-feed synchronization: 155607 ms; no private NVD key required.
+Application BUILD SUCCESS; 22.563 s; 2 non-blocking CPE matches, triaged in security-remaining-triage.json.
+Lambda BUILD SUCCESS; 11.461 s; no reported vulnerabilities.
+NVD feed last modified: 2026-10-25T18:00:12-04:00; cache checked: 2026-10-25T23:53:57Z.
+OSS Index automatically unavailable without credentials; no claim that authenticated Sonatype analysis ran. No analyzers, severity gates or failure-on-error settings were disabled to obtain success.

@@ -5,7 +5,8 @@ RUN mvn -q -B dependency:go-offline
 COPY src src
 RUN mvn -q -B package -DskipTests
 
-FROM eclipse-temurin:21-jre
+# Keep the supported Ubuntu 24.04 base explicit; the floating tag added an unused Pebble daemon.
+FROM eclipse-temurin:21-jre-noble
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
