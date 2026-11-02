@@ -4,7 +4,7 @@
 
 - Replace Swagger UI 5.34.0 with 5.34.1 containing DOMPurify 3.4.17, and align runtime/test asset paths.
 - Manage Kafka's transitive snappy-java at patched 1.1.10.9.
-- Raise HTTP sanitizer coverage to 3.4.17 and update the container startup smoke assertion. Hosted source `1a5b5f6` passes 52 application/9 Lambda tests, Compose startup, CodeQL, both dependency scans and the rebuilt-image gate. Dependency Review is independently blocked by the disabled repository dependency graph; owner approval to enable it is pending. See `evidence/security-nov02-verification.json`.
+- Raise HTTP sanitizer coverage to 3.4.17 and update the container startup smoke assertion. Hosted source `1a5b5f6` passes 52 application/9 Lambda tests, Compose startup, CodeQL, both dependency scans and the rebuilt-image gate. After owner-approved Dependency graph enablement, source `0559fb8` also passes CI and every Security job, including Dependency Review. See `evidence/security-nov02-verification.json`.
 
 ## Focused workflow release — 2026-10-25
 

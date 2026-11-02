@@ -49,7 +49,17 @@
       "cvssFailureThreshold": 7,
       "failOnError": true
     },
-    "dependencyReview": "blocked: Dependency graph disabled; approval to enable requested"
+    "dependencyReview": {
+      "conclusion": "success",
+      "runId": 41484260115,
+      "runAttempt": 2,
+      "jobId": 125414516934,
+      "sourceCommit": "0559fb897527a7de3aba5e35974f927fb71ce0d6",
+      "dependencyGraph": "enabled in repository settings after explicit owner approval",
+      "result": "No vulnerable packages with severity high or higher; no denied packages"
+    },
+    "followupOverallSecurity": "success: run 41484260115 attempt 2 at 0559fb8",
+    "followupCi": "success: run 41484259617 at 0559fb8"
   },
   "localChecks": ["git diff --check", "node scripts/check-evidence.mjs", "managed dependency XML assertions"],
   "limitations": ["No local Java installation or running Docker engine; build/runtime evidence is hosted", "No production deployment or exploitation testing"]
