@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-02",
+  "sourceCommit": "1a5b5f6473b85bbecb65203b14a8db8c0669fe00",
+  "pullRequest": "https://github.com/MarvelousJade/paymentops/pull/13",
+  "originalFailure": "https://github.com/MarvelousJade/paymentops/actions/runs/41475334002",
+  "changes": {
+    "swaggerUi": {"from": "5.34.0", "to": "5.34.1"},
+    "bundledDomPurify": {"from": "3.4.16", "to": "3.4.17"},
+    "snappyJava": {"from": "1.1.10.7", "to": "1.1.10.9"}
+  },
+  "artifactComparison": {
+    "source": "Maven Central org.webjars:swagger-ui JARs",
+    "bundles": ["swagger-ui-bundle.js", "swagger-ui-es-bundle.js"],
+    "oldBundlesRejectUpdatedSanitizerFloor": true,
+    "newBundlesAcceptUpdatedSanitizerFloor": true,
+    "scope": "artifact identity check, not browser exploit testing"
+  },
+  "ci": {
+    "url": "https://github.com/MarvelousJade/paymentops/actions/runs/41482924583",
+    "conclusion": "success",
+    "applicationTests": {"passed": 52, "failures": 0, "errors": 0, "skipped": 0},
+    "lambdaTests": {"passed": 9, "failures": 0, "errors": 0, "skipped": 0},
+    "containerBuild": "passed",
+    "composeSmoke": "health UP, OpenAPI and Swagger HTTP assets, DOMPurify 3.4.17, non-root user, no Pebble daemon",
+    "composeCleanup": "passed"
+  },
+  "security": {
+    "url": "https://github.com/MarvelousJade/paymentops/actions/runs/41482924692",
+    "codeql": "success",
+    "containerScan": {
+      "conclusion": "success",
+      "imageId": "sha256:58a47b13fbfb3b815b06f227aca086c124969c5a519c69c7630e31a48ae16aa0",
+      "artifactId": 13161115190,
+      "artifactZipSha256": "9f6e7bdba838884f637d3f27eca3ad3e6370b512579549025cfc3aac92e4a809",
+      "targets": ["paymentops:scan (ubuntu 24.04)", "Java"],
+      "reportedVulnerabilities": 0,
+      "reportedSecrets": 0,
+      "filters": "HIGH,CRITICAL; ignore-unfixed=true"
+    },
+    "dependencyCheck": {
+      "conclusion": "success for application and Lambda",
+      "artifactId": 13161320821,
+      "artifactZipSha256": "b5b7be822b0e46383fa3292e840aac9731b1bcb9e4fc5b2886112ab51e017a62",
+      "resolvedArtifacts": ["snappy-java-1.1.10.9.jar", "swagger-ui-5.34.1.jar"],
+      "findingsAgainstPatchedArtifacts": 0,
+      "remainingApplicationMatches": ["CVE-2026-41115", "CVE-2026-54285"],
+      "remainingMatchesScope": "existing non-blocking Kafka broker/OpenTelemetry JavaScript CPE matches; see security-remaining-triage.json",
+      "lambdaFindings": 0,
+      "cvssFailureThreshold": 7,
+      "failOnError": true
+    },
+    "dependencyReview": {
+      "conclusion": "success",
+      "runId": 41484260115,
+      "runAttempt": 2,
+      "jobId": 125414516934,
+      "sourceCommit": "0559fb897527a7de3aba5e35974f927fb71ce0d6",
+      "dependencyGraph": "enabled in repository settings after explicit owner approval",
+      "result": "No vulnerable packages with severity high or higher; no denied packages"
+    },
+    "followupOverallSecurity": "success: run 41484260115 attempt 2 at 0559fb8",
+    "followupCi": "success: run 41484259617 at 0559fb8"
+  },
+  "localChecks": ["git diff --check", "node scripts/check-evidence.mjs", "managed dependency XML assertions"],
+  "limitations": ["No local Java installation or running Docker engine; build/runtime evidence is hosted", "No production deployment or exploitation testing"]
+}

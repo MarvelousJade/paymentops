@@ -47,7 +47,7 @@ jobs:
           curl --fail --silent --show-error http://localhost:8080/v3/api-docs >/dev/null
           curl --fail --silent --show-error http://localhost:8080/swagger-ui/index.html >/dev/null
           curl --fail --silent --show-error http://localhost:8080/swagger-ui/swagger-ui-bundle.js > "$RUNNER_TEMP/swagger-ui-bundle.js"
-          node -e 'const fs = require("node:fs"), assert = require("node:assert/strict"); assert(fs.readFileSync(process.env.RUNNER_TEMP + "/swagger-ui-bundle.js", "utf8").includes("DOMPurify.version=\"3.4.16\""))'
+          node -e 'const fs = require("node:fs"), assert = require("node:assert/strict"); assert(fs.readFileSync(process.env.RUNNER_TEMP + "/swagger-ui-bundle.js", "utf8").includes("DOMPurify.version=\"3.4.17\""))'
           docker compose exec -T app sh -c 'test ! -e /usr/bin/pebble && test "$(id -u)" != 0'
           echo "PASS Compose health, OpenAPI, Swagger sanitizer, non-root user and no Pebble daemon"
       - name: Compose diagnostics on failure

@@ -1,5 +1,11 @@
 # Verification record
 
+## November 2 dependency refresh
+
+Implementation source `1a5b5f6` passes hosted [CI run 41482924583](https://github.com/MarvelousJade/paymentops/actions/runs/41482924583): 52 application tests and 9 Lambda tests, no failures/errors/skips, container build and default Compose startup. The actual Swagger HTTP bundle contains DOMPurify 3.4.17. [Security run 41482924692](https://github.com/MarvelousJade/paymentops/actions/runs/41482924692) passes CodeQL, both Dependency-Check scans and the rebuilt-image gate. Downloaded reports verify the patched versions and no findings against either artifact. Existing non-blocking CPE matches remain visible.
+
+Dependency Review initially failed independently because repository Dependency graph was disabled. After explicit owner approval, enabled its read-only manifest analysis and reran the failed review. [Security run 41484260115 attempt 2](https://github.com/MarvelousJade/paymentops/actions/runs/41484260115/attempts/2) passes every job on `0559fb8`, including Dependency Review (no high-or-higher vulnerable or denied packages). [CI run 41484259617](https://github.com/MarvelousJade/paymentops/actions/runs/41484259617) also passes on that source. No checks were bypassed, no production deployment occurred, and historical performance measurements remain unchanged. This is a verified review-branch repair, not a merged-main claim. Bounded source-specific evidence: [November 2 results](evidence/security-nov02-verification.json).
+
 ## Environment and commands
 
 2026-10-25: Windows 11 Pro 10.0.26300, portable Temurin 21.0.12.1+1, Maven Wrapper (Maven 3.9.16), PostgreSQL 16.4 on loopback port 15432. Local outbox transport; simulated settlement and webhooks. No Docker engine or WSL distribution. Standalone Docker 28.5.1 and Compose 2.39.4 clients were downloaded later for config validation only. Tool archives/data live outside the repository. Native PostgreSQL archive: `io.zonky.test.postgres:embedded-postgres-binaries-windows-amd64:16.4.0`; JDK from Adoptium official binary API. Do not use this trust-authenticated disposable database for shared or real data.
