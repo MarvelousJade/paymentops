@@ -74,3 +74,14 @@ webjar whenever updating it; HTTP tests verify the real served bundle.
 See the journal and `evidence/security-remaining-triage.json` for unsuppressed
 non-applicable CPE matches. These remain visible rather than being hidden.
 Passing gates is not proof of zero vulnerabilities or production readiness.
+
+## November 2 dependency refresh
+
+The scheduled scan at unchanged main `d9914a1` reported new blocking findings
+in DOMPurify 3.4.16 bundled by Swagger UI 5.34.0 and in Kafka's transitive
+snappy-java 1.1.10.7. The scoped repair selects Swagger UI 5.34.1 (both
+published JS bundles contain DOMPurify 3.4.17) and snappy-java 1.1.10.9.
+Both Springdoc asset paths match the new webjar; HTTP coverage rejects
+sanitizers below 3.4.17. The standalone Lambda has separate dependency
+management and is still scanned independently. No gate or analyzer was
+disabled. See BUG-010 in the journal for evidence and verification status.

@@ -1,5 +1,15 @@
 # Engineering journal
 
+## BUG-010 — refreshed security data flags bundled sanitizer and Snappy
+
+- **Problem/provenance:** naturally observed in scheduled Security run [41475334002](https://github.com/MarvelousJade/paymentops/actions/runs/41475334002) on unchanged main `d9914a1` (2026-11-02). Earlier successful scans describe their own database snapshots, not a permanent clean bill of health.
+- **Reproduction/evidence:** Dependency-Check blocked on CVE-2026-116803 and CVE-2026-116804 (CVSS 10.0) in both Swagger UI 5.34.0 bundles containing DOMPurify 3.4.16. Trivy's retained JSON reported CVE-2026-108106 and CVE-2026-93451 in snappy-java 1.1.10.7, with 1.1.10.9 listed as fixed. CodeQL passed; dependency review was correctly skipped for the scheduled event.
+- **Investigation/root cause:** inspected original job logs and downloaded the retained container JSON. Maven Central's published Swagger UI 5.34.1 JAR was inspected directly: both swagger-ui-bundle.js and swagger-ui-es-bundle.js identify DOMPurify 3.4.17. The application pinned the older webjar; Kafka still brought in the older Snappy implementation. Existing HTTP sanitizer coverage allowed any version from 3.4.12 and therefore did not reject 3.4.16.
+- **Fix:** update the managed webjar and both Springdoc runtime/test asset paths to 5.34.1; manage snappy-java 1.1.10.9. Raise the real HTTP bundle assertion to DOMPurify >=3.4.17 and update the Compose smoke check to the inspected version.
+- **Tradeoffs:** narrow maintenance updates preserve the API-documentation UI and Kafka compression support. Keep overrides under review as upstream dependency management catches up. Scanner thresholds, analyzers and suppression policy remain unchanged. No production exploitation or customer impact was observed or inferred.
+- **Verification:** local whitespace and evidence/link consistency checks are recorded with the change. This fresh Windows checkout has no Java executable or running Docker engine, so application/Lambda builds, HTTP tests, Compose startup and security gates require hosted verification before completion. Hosted results will be recorded separately; no local build/test pass is claimed.
+- **Lesson/interview explanation:** a scheduled scan can expose vulnerabilities without a source change. Inspect the dependency actually shipped, update bundled JavaScript through its containing artifact, align the runtime resource path, and verify the consumer-facing asset as well as the rebuilt image.
+
 ## 2026-10-25 — baseline and environment hurdle
 
 - Starting commit: `9316c46`. The authorized working tree already contained a large PaymentOps implementation, infrastructure and docs. Preserve that provenance rather than manufacture earlier increments. `.claude/skills/verify/SKILL.md` is unrelated and stays uncommitted; existing staged `AGENTS.md` is preserved.

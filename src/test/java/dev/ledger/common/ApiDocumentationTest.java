@@ -43,8 +43,8 @@ class ApiDocumentationTest {
         int major = Integer.parseInt(version.group(1));
         int minor = Integer.parseInt(version.group(2));
         int patch = Integer.parseInt(version.group(3));
-        assertThat(major > 3 || major == 3 && (minor > 4 || minor == 4 && patch >= 12))
-                .as("DOMPurify is at least 3.4.12, not the vulnerable 3.3.2 bundle")
+        assertThat(major > 3 || major == 3 && (minor > 4 || minor == 4 && patch >= 17))
+                .as("DOMPurify is at least 3.4.17, fixing the findings against 3.4.16")
                 .isTrue();
     }
 
