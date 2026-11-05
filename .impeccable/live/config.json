@@ -1,0 +1,6 @@
+{
+  "files": ["src/main/resources/static/operations.html"],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}
