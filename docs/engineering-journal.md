@@ -1,5 +1,12 @@
 # Engineering journal
 
+## 2026-11-05 — existing hosted deployment accessibility
+
+- **Request/checklist:** document the supplied live URL, verify read-only responses, retain evidence and limitations, check documentation consistency, inspect the diff and commit.
+- **Acceptance/evidence:** Swagger UI, health and OpenAPI GET requests all returned HTTP 200 at 05:52 UTC; health reported `UP`, and the specification identified PaymentOps API v1.0. Response summary: `evidence/live-deployment-check.json`. Added a discoverable README link and reproducible commands in `verification.md`.
+- **Decision/limitations:** document only observed accessibility of an existing deployment. No hosted writes, deployment, uptime measurement or payment/refund test. Source commit and dependency versions of the hosted application are unknown; local historical benchmark results cannot be attributed to it. No bug encountered or meaningful implementation tradeoff; this is documentation of external verification, not a new deployment or personal ownership claim.
+- **Verification:** three live read-only checks passed; `node scripts/check-evidence.mjs` and `git diff --check` passed before commit. Documentation-only change; application tests were not rerun.
+
 ## 2026-10-25 — baseline and environment hurdle
 
 - Starting commit: `9316c46`. The authorized working tree already contained a large PaymentOps implementation, infrastructure and docs. Preserve that provenance rather than manufacture earlier increments. `.claude/skills/verify/SKILL.md` is unrelated and stays uncommitted; existing staged `AGENTS.md` is preserved.

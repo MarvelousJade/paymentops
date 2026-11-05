@@ -1,0 +1,40 @@
+{
+  "checkedAtUtc": "2026-11-05T05:52:50.990966+00:00",
+  "baseUrl": "https://ledger-service-xubs.onrender.com",
+  "method": "GET",
+  "checks": [
+    {
+      "path": "/swagger-ui/index.html",
+      "status": 200,
+      "contentType": "text/html",
+      "containsSwaggerTitle": true
+    },
+    {
+      "path": "/actuator/health",
+      "status": 200,
+      "contentType": "application/vnd.spring-boot.actuator.v3+json",
+      "body": {
+        "groups": [
+          "liveness",
+          "readiness"
+        ],
+        "status": "UP"
+      }
+    },
+    {
+      "path": "/v3/api-docs",
+      "status": 200,
+      "contentType": "application/json",
+      "info": {
+        "title": "PaymentOps API",
+        "description": "Event-driven payment operations: authorization, capture, refunds, transactional outbox, balanced ledger posting, settlement, reconciliation, and signed webhooks.",
+        "version": "1.0"
+      }
+    }
+  ],
+  "limitations": [
+    "Point-in-time read-only accessibility check, not an uptime measurement.",
+    "Deployed Git commit and dependency versions were not established.",
+    "No hosted payment/refund workflow or performance benchmark was executed."
+  ]
+}

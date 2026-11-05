@@ -64,6 +64,26 @@ A fresh packaged-application HTTP workflow after the updates passed authorize/ca
 
 [Subsequent CI 40248711117](https://github.com/MarvelousJade/paymentops/actions/runs/40248711117) at `ed9c50c` passed the same 52/9 suites, built and **started default db+app Compose**, waited for both containers to be healthy, fetched OpenAPI/Swagger and the patched sanitizer, checked the non-root user and absence of Pebble, then removed its isolated project containers and volumes. Security run 40248711141 also passed. Evidence: `evidence/security-compose-verification.txt`. This verifies default container startup, not optional Kafka/Registry/dashboards or full payment execution inside that container; the separately documented native packaged HTTP/SQL smoke verifies the payment workflow.
 
+## Live deployment accessibility
+
+On 2026-11-05 at 05:52 UTC, read-only GET requests to `https://ledger-service-xubs.onrender.com` confirmed:
+
+| Endpoint | Observed result |
+|---|---|
+| `/swagger-ui/index.html` | HTTP 200; HTML contains the Swagger UI title |
+| `/actuator/health` | HTTP 200; JSON reports `status: UP` |
+| `/v3/api-docs` | HTTP 200; specification identifies `PaymentOps API`, version `1.0` |
+
+[Recorded response summary](evidence/live-deployment-check.json). Reproduce without modifying hosted data:
+
+```bash
+curl --fail --show-error --location https://ledger-service-xubs.onrender.com/swagger-ui/index.html
+curl --fail --show-error --location https://ledger-service-xubs.onrender.com/actuator/health
+curl --fail --show-error --location https://ledger-service-xubs.onrender.com/v3/api-docs
+```
+
+This is a point-in-time accessibility check, not an uptime measurement, browser interaction test, hosted payment/refund verification, or performance result. The deployed Git commit and dependency versions remain unknown. No deployment was performed as part of this check; the supplied URL points to an existing deployment. Earlier statements below describe the scope of prior verification, not evidence that no hosted application exists.
+
 ## Remaining gaps
 
 Full optional `platform` Compose runtime, actual Kafka redelivery/rebalance/offset recovery, Schema Registry interoperability and real AWS deployment are not established. Hosted container build, LocalStack tests and configured security gates now pass. The optional platform's recovery/interop and any real deployment remain outside this evidence. Historical ledger load measurements are not new release measurements. Repository publication was subsequently authorized and completed (see journal); no deployment was performed. Initial screenshot inspection is not a usability study. More limitations: CHANGELOG.md.

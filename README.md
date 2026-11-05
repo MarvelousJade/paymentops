@@ -11,6 +11,12 @@ The application is a modular monolith with PostgreSQL, a transactional outbox, s
 
 Use disposable synthetic data only. No real cards, bank credentials or customer information. This is not a payment processor and has not been validated for production use.
 
+## Live demo
+
+[Open the hosted API explorer](https://ledger-service-xubs.onrender.com/swagger-ui/index.html).
+
+Read-only checks on 2026-11-05 returned HTTP 200 for Swagger UI, the health endpoint (`UP`), and the OpenAPI specification (`PaymentOps API`, version `1.0`). This confirms point-in-time accessibility, not continuous uptime, a complete hosted payment/refund workflow, or the deployed Git commit. Use synthetic data only. See [live verification](docs/verification.md#live-deployment-accessibility) and [recorded responses](docs/evidence/live-deployment-check.json).
+
 ## Quick start
 
 Prerequisites: Docker Engine with Compose, or Java 21 and PostgreSQL 16. Node 22+ runs the optional automated demonstration.
